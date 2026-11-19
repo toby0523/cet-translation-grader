@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f2e9">
+<meta name="description" content="四六级翻译 15 分制智能批改：拍照/粘贴学生译文，按官方档位打分，逐处指出错误并给出润色与提分建议。">
+<title>四六级翻译批改 · 拍照打分</title>
+<style>
+  :root{
+    --site-bg:#f6f2e9; --site-fg:#1f2430; --site-accent:#33507e; --site-on-accent:#ffffff;
+    --site-surface:#fffdf8; --site-muted:#7f8798; --site-border:#e5e0d5;
+    --site-font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    --site-radius:16px; --site-space:1; --site-type:1; --site-motion:1;
+    --ink:#1f2430; --ink2:#5a6273; --muted:var(--site-muted); --line:var(--site-border);
+    --paper:var(--site-bg); --card:var(--site-surface); --accent:var(--site-accent);
+    --green:#2f7d5b; --green-soft:#e7f2ec; --red:#b04a3a; --red-soft:#fae9e5;
+    --amber:#a9772a; --amber-soft:#faf0dc; --blue-soft:#e9edf5;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0}
+  body{
+    background:var(--paper); color:var(--ink);
+    font:calc(15px * var(--site-type))/1.65 var(--site-font);
+    padding-bottom:calc(96px + env(safe-area-inset-bottom));
+  }
+  button,input,textarea,select{font:inherit;color:inherit}
+  button{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:calc(var(--site-radius) * .65);
+    padding:calc(9px * var(--site-space)) calc(14px * var(--site-space));
+    transition:transform calc(120ms * var(--site-motion)) ease, background calc(160ms * var(--site-motion)) ease}
+  button:active{transform:scale(.985)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:var(--site-on-accent);font-weight:600}
+  button.ghost{background:transparent}
+  button:disabled{opacity:.5}
+  a{color:var(--accent)}
+
+  .top{position:sticky;top:0;z-index:20;background:var(--paper);background:color-mix(in srgb,var(--paper) 88%,transparent);
+    backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+  .top .in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:calc(10px*var(--site-space));
+    padding:calc(10px*var(--site-space)) calc(16px*var(--site-space))}
+  .brand{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+  .brand b{font-size:calc(16px*var(--site-type));letter-spacing:.2px}
+  .brand span{font-size:calc(11.5px*var(--site-type));color:var(--muted)}
+  .top .sp{flex:1}
+  .top button{padding:calc(6px*var(--site-space)) calc(11px*var(--site-space));font-size:calc(12.5px*var(--site-type))}
+
+  main{max-width:760px;margin:0 auto;padding:calc(14px*var(--site-space)) calc(14px*var(--site-space)) 0}
+  .intro{margin:calc(4px*var(--site-space)) 0 calc(12px*var(--site-space))}
+  .intro h1{font-size:calc(21px*var(--site-type));line-height:1.35;margin:0 0 4px;letter-spacing:.2px}
+  .intro p{margin:0;color:var(--ink2);font-size:calc(13px*var(--site-type))}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .chip{font-size:calc(11.5px*var(--site-type));color:var(--ink2);background:#fff;border:1px solid var(--line);
+    border-radius:999px;padding:2px 9px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--site-radius);
+    margin-bottom:calc(12px*var(--site-space));overflow:hidden}
+  .card-h{display:flex;align-items:center;gap:8px;padding:calc(12px*var(--site-space)) calc(14px*var(--site-space)) 0}
+  .card-h .n{width:22px;height:22px;border-radius:7px;background:var(--blue-soft);color:var(--accent);
+    display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}
+  .card-h h2{font-size:calc(15px*var(--site-type));margin:0}
+  .card-h .hint{margin-left:auto;font-size:calc(11.5px*var(--site-type));color:var(--muted)}
+  .card-b{padding:calc(12px*var(--site-space)) calc(14px*var(--site-space)) calc(14px*var(--site-space))}
+
+  textarea{width:100%;border:1px solid var(--line);border-radius:calc(var(--site-radius)*.6);
+    background:#fff;padding:calc(10px*var(--site-space)) calc(12px*var(--site-space));
+    line-height:1.7;resize:vertical;min-height:110px;font-size:calc(14.5px*var(--site-type))}
+  textarea:focus,button:focus-visible,input:focus,select:focus{outline:2px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:1px}
+  textarea::placeholder{color:#a8aebc}
+  .meta{display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-size:calc(11.5px*var(--site-type));color:var(--muted)}
+  .meta b{color:var(--ink2);font-weight:600}
+
+  .exam-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:calc(10px*var(--site-space))}
+  .exam-row .lab{font-size:calc(12.5px*var(--site-type));color:var(--muted)}
+  .seg{display:inline-flex;background:#f0ece2;border:1px solid var(--line);border-radius:999px;padding:2px}
+  .seg button{border:0;background:transparent;color:var(--ink2);font-size:calc(13px*var(--site-type));
+    padding:calc(5px*var(--site-space)) calc(13px*var(--site-space));border-radius:999px;line-height:1.3}
+  .seg button.on{background:var(--accent);color:var(--site-on-accent);font-weight:600}
+  .exam-row .hint{margin-left:auto;font-size:calc(11.5px*var(--site-type));color:var(--muted)}
+
+  .photo-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .photo-row button{font-size:calc(13px*var(--site-type))}
+  .preview{display:none;margin-top:10px;border:1px solid var(--line);border-radius:calc(var(--site-radius)*.6);overflow:hidden;background:#fff}
+  .preview img{display:block;width:100%;max-height:260px;object-fit:contain}
+  .status{font-size:calc(12px*var(--site-type));color:var(--muted);margin-top:8px;min-height:1.4em}
+  .status.ok{color:var(--green)} .status.err{color:var(--red)} .status.warn{color:var(--amber)}
+
+  details{border-top:1px dashed var(--line);margin-top:12px;padding-top:10px}
+  details summary{cursor:pointer;font-size:calc(13px*var(--site-type));color:var(--ink2);font-weight:600}
+  details .in{padding-top:10px}
+  .field{margin-bottom:8px}
+  .field label{display:block;font-size:calc(12px*var(--site-type));color:var(--muted);margin:0 0 4px}
+  input[type=text],input[type=password],select{width:100%;border:1px solid var(--line);border-radius:calc(var(--site-radius)*.55);
+    background:#fff;padding:calc(9px*var(--site-space)) calc(11px*var(--site-space));font-size:calc(13.5px*var(--site-type))}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .note{font-size:calc(12px*var(--site-type));color:var(--muted);line-height:1.6;margin-top:8px}
+  .note b{color:var(--ink2)}
+
+  .action{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--paper);
+    background:linear-gradient(to top,var(--paper) 62%,rgba(246,242,233,0));
+    padding:10px 14px calc(12px + env(safe-area-inset-bottom))}
+  .action .in{max-width:760px;margin:0 auto;display:flex;gap:8px}
+  .action button{flex:1;padding:calc(13px*var(--site-space));font-size:calc(16px*var(--site-type));border-radius:calc(var(--site-radius)*.8)}
+  .action .demo{flex:0 0 auto;width:auto;font-size:calc(13px*var(--site-type));color:var(--ink2);background:#fff}
+
+  /* 报告 */
+  .report{scroll-margin-top:64px}
+  .score-head{display:flex;align-items:center;gap:calc(14px*var(--site-space));padding-bottom:calc(12px*var(--site-space));
+    border-bottom:1px solid var(--line);margin-bottom:calc(12px*var(--site-space))}
+  .ring{position:relative;width:96px;height:96px;flex:none}
+  .ring svg{display:block;width:96px;height:96px;transform:rotate(-90deg)}
+  .ring .num{position:absolute;inset:0;display:grid;place-items:center}
+  .ring .num b{font-size:calc(30px*var(--site-type));line-height:1}
+  .ring .num span{font-size:10px;color:var(--muted);margin-top:2px}
+  .sh-main{min-width:0}
+  .pill{display:inline-block;font-size:calc(12px*var(--site-type));font-weight:600;color:var(--accent);
+    background:var(--blue-soft);border-radius:999px;padding:2px 10px;margin-bottom:4px}
+  .sh-main h3{margin:0 0 4px;font-size:calc(17px*var(--site-type))}
+  .sh-main p{margin:0;font-size:calc(12.5px*var(--site-type));color:var(--ink2)}
+
+  .dims{display:grid;gap:8px;margin-bottom:calc(14px*var(--site-space))}
+  .dim{display:grid;grid-template-columns:64px 1fr 34px;align-items:center;gap:8px;font-size:calc(12.5px*var(--site-type))}
+  .dim .bar{height:6px;border-radius:99px;background:#f0ece2;overflow:hidden}
+  .dim .bar i{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width calc(500ms*var(--site-motion)) ease}
+  .dim.acc i{background:var(--amber)} .dim.flu i{background:var(--green)}
+  .dim b{text-align:right;font-variant-numeric:tabular-nums}
+
+  .sec{padding:calc(12px*var(--site-space)) 0;border-top:1px solid var(--line)}
+  .sec:first-of-type{border-top:0}
+  .sec h4{margin:0 0 6px;font-size:calc(14px*var(--site-type));display:flex;align-items:center;gap:6px}
+  .sec h4 .t{font-size:calc(11.5px*var(--site-type));color:var(--muted);font-weight:400}
+  .sec p{margin:0;font-size:calc(13.5px*var(--site-type));color:var(--ink2)}
+  .kps{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+  .kp{display:flex;gap:7px;align-items:flex-start;font-size:calc(12.5px*var(--site-type));color:var(--ink2)}
+  .kp i{flex:none;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-style:normal;margin-top:2px}
+  .kp i.y{background:var(--green-soft);color:var(--green)} .kp i.m{background:var(--red-soft);color:var(--red)}
+
+  .errs{display:flex;flex-direction:column;gap:8px}
+  .err{border:1px solid var(--line);border-radius:calc(var(--site-radius)*.6);padding:9px 11px;background:#fff}
+  .err .top-line{display:flex;gap:8px;align-items:center;margin-bottom:2px}
+  .err .badge{font-size:10.5px;font-weight:700;background:var(--red-soft);color:var(--red);border-radius:5px;padding:1px 6px;white-space:nowrap}
+  .err.minor .badge{background:var(--amber-soft);color:var(--amber)}
+  .err .sev{font-size:10.5px;color:var(--muted);margin-left:auto}
+  .err .src{font-size:calc(12.5px*var(--site-type));color:var(--ink);word-break:break-word}
+  .err .fix{font-size:calc(12.5px*var(--site-type));color:var(--green);font-weight:600}
+  .err .why{font-size:calc(11.5px*var(--site-type));color:var(--muted);margin-top:3px}
+
+  .revised{background:#fbfaf5;border:1px dashed var(--line);border-radius:calc(var(--site-radius)*.6);
+    padding:10px 12px;font-size:calc(13px*var(--site-type));line-height:1.8;white-space:pre-wrap;color:var(--ink)}
+  .advice ol{margin:4px 0 0;padding-left:18px;font-size:calc(13px*var(--site-type));color:var(--ink2)}
+  .advice li{margin-bottom:4px}
+  .advice .extra{margin-top:8px;font-size:calc(12.5px*var(--site-type));color:var(--muted)}
+
+  .share-row{display:flex;gap:8px;margin-top:calc(12px*var(--site-space));flex-wrap:wrap}
+  .share-row button{flex:1;min-width:140px}
+  .foot{font-size:calc(11.5px*var(--site-type));color:var(--muted);line-height:1.7;
+    padding:calc(10px*var(--site-space)) 2px calc(20px*var(--site-space));text-align:center}
+
+  /* 弹层 */
+  .mask{position:fixed;inset:0;z-index:50;background:rgba(24,26,32,.45);display:none;align-items:flex-end;justify-content:center}
+  .mask.on{display:flex}
+  .sheet{background:var(--card);width:100%;max-width:760px;max-height:92vh;overflow:auto;
+    border-radius:18px 18px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
+  .sheet .bar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .sheet .bar b{font-size:15px}
+  .sheet .bar button{margin-left:auto}
+  .sheet img{display:block;width:100%;border:1px solid var(--line);border-radius:10px}
+  .sheet .tip{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
+  dialog{border:0;border-radius:16px;padding:0;max-width:640px;width:calc(100% - 28px);background:var(--card);color:var(--ink)}
+  dialog::backdrop{background:rgba(24,26,32,.45)}
+  /* 老版本微信内置浏览器不支持 showModal 时的降级样式 */
+  dialog.fb[open]{position:fixed;left:14px;right:14px;top:9vh;margin:0 auto;width:auto;max-width:640px;z-index:70;
+    max-height:82vh;overflow:auto;box-shadow:0 0 0 100vmax rgba(24,26,32,.45)}
+  .dlg-h{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .dlg-h b{font-size:15px}
+  .dlg-h button{margin-left:auto}
+  .dlg-b{padding:12px 14px 16px;max-height:70vh;overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px}
+  .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(8px);
+    background:#2a2f3a;color:#fff;font-size:13px;padding:8px 14px;border-radius:999px;opacity:0;pointer-events:none;
+    transition:opacity calc(180ms*var(--site-motion)) ease, transform calc(180ms*var(--site-motion)) ease;z-index:60;max-width:80vw;text-align:center}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media (max-width:380px){ .two{grid-template-columns:1fr} .ring{width:84px;height:84px} .ring svg{width:84px;height:84px} }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+  <div class="brand"><b>四六级翻译批改</b><span>15 分制 · 逐处诊断 · 提分建议</span></div>
+  <div class="sp"></div>
+  <button class="ghost" id="rubricBtn">评分标准</button>
+</div></header>
+
+<main>
+  <div class="intro">
+    <h1>拍一张，看看这篇翻译能拿几分</h1>
+    <p>四级 / 六级分开评分：四级抓基础准确，六级比句式与用词。按官方 15 分档位打分，指出每一处错误和修改方法。</p>
+    <div class="chips"><span class="chip">四级 / 六级</span><span class="chip">拍照识别</span><span class="chip">信息点核对</span><span class="chip">逐句改错</span><span class="chip">成绩单</span></div>
+  </div>
+
+  <section class="card">
+    <div class="card-h"><span class="n">1</span><h2>学生作答</h2><span class="hint">英文</span></div>
+    <div class="card-b">
+      <div class="exam-row">
+        <span class="lab">考试类型</span>
+        <div class="seg" id="examSeg">
+          <button data-exam="cet4" class="on">四级 CET-4</button>
+          <button data-exam="cet6">六级 CET-6</button>
+        </div>
+        <span class="hint" id="examHint">140–160 字 · 抓基础准确</span>
+      </div>
+      <textarea id="transcript" rows="6" placeholder="粘贴学生的英文译文，或点下方拍照识别"></textarea>
+      <div class="meta"><span><b id="count">0</b> 词</span><span>保留原拼写和语法错误，识别更准</span></div>
+
+      <div class="photo-row">
+        <button id="pickBtn">📷 拍照 / 选图</button>
+        <button id="ocrBtn" disabled>识别手写</button>
+        <button id="verifyBtn" hidden>二次校对</button>
+      </div>
+      <input type="file" id="file" accept="image/*" hidden>
+      <div class="preview" id="previewBox"><img id="preview" alt="作答照片预览"></div>
+      <div class="status" id="ocrStatus">识别手写需要配置一次视觉模型 API（在下方“识别设置”里填），不配置也可以直接输入文字。</div>
+
+      <details id="ocrCfg">
+        <summary>识别设置（视觉模型 API，仅存本机）</summary>
+        <div class="in">
+          <div class="field"><label for="preset">服务商</label>
+            <select id="preset">
+              <option value="qwen">通义千问 VL（阿里云）</option>
+              <option value="openai">OpenAI</option>
+              <option value="zhipu">智谱 GLM-4V</option>
+              <option value="custom">自定义（OpenAI 兼容）</option>
+            </select>
+          </div>
+          <div class="two">
+            <div class="field"><label for="model">模型名</label><input type="text" id="model" placeholder="qwen-vl-max"></div>
+            <div class="field"><label for="base">接口地址</label><input type="text" id="base" placeholder="https://.../v1"></div>
+          </div>
+          <div class="field"><label for="key">API Key</label><input type="password" id="key" placeholder="只保存在这台手机的浏览器里" autocomplete="off"></div>
+          <div class="note">Key 不会上传到本站，只用于你手机直接调用所选服务商。<b>若提示网络或跨域错误</b>，说明该服务商不允许浏览器直连，请换一家或改为手动输入。</div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h"><span class="n">2</span><h2>题目与参考译文</h2><span class="hint">建议填写</span></div>
+    <div class="card-b">
+      <div class="field"><label for="source">中文原文（题干）</label>
+        <textarea id="source" rows="3" placeholder="粘贴本题的中文段落"></textarea></div>
+      <div class="field" style="margin-bottom:0"><label for="reference">参考译文</label>
+        <textarea id="reference" rows="4" placeholder="粘贴参考译文：用于核对信息点是否译全，不填也能打分但覆盖度按篇幅估算"></textarea></div>
+      <div class="note">有参考译文时，批改会逐意群核对“哪句没译出来”，这是 7 分和 12 分的关键差别。</div>
+    </div>
+  </section>
+
+  <div id="report" class="report"></div>
+
+  <div class="foot">评分用于教学反馈，最终成绩以考场阅卷为准。<br>在微信里点右上角“···”即可转发给同学。</div>
+</main>
+
+<div class="action"><div class="in">
+  <button class="demo" id="demoBtn">试用示例</button>
+  <button class="primary" id="gradeBtn">开始批改</button>
+</div></div>
+
+<div class="mask" id="shareMask">
+  <div class="sheet">
+    <div class="bar"><b>批改成绩单</b><button id="closeShare">关闭</button></div>
+    <img id="shareImg" alt="批改成绩单">
+    <div class="tip">长按图片保存到相册，再发送给同学或家长。</div>
+  </div>
+</div>
+
+<dialog id="rubricDlg">
+  <div class="dlg-h"><b>四六级翻译评分标准（15 分）</b><button id="closeRubric">关闭</button></div>
+  <div class="dlg-b">
+    <table>
+      <tr><th>档位</th><th>官方描述</th></tr>
+      <tr><td><b>13–15</b></td><td>译文准确表达原文的意思，用词贴切，行文流畅，基本上无语言错误，仅有个别小错。</td></tr>
+      <tr><td><b>10–12</b></td><td>译文基本准确表达原文的意思，文字通顺、连贯，有少量语言错误。</td></tr>
+      <tr><td><b>7–9</b></td><td>译文勉强表达原文的意思，文字基本连贯，有较多语言错误，其中有些是严重错误。</td></tr>
+      <tr><td><b>4–6</b></td><td>译文仅表达了一小部分原文的意思，文字不连贯，有大量语言错误。</td></tr>
+      <tr><td><b>1–3</b></td><td>译文支离破碎，除个别词语或句子外，基本上没有表达原文的意思。</td></tr>
+      <tr><td><b>0</b></td><td>白卷、与题目无关或完全无法辨认。</td></tr>
+    </table>
+    <div class="note" style="margin-top:10px">本工具采用“总体印象 + 三个维度锚点”：信息覆盖 45%、语言准确性 35%、行文连贯 20%，再用档位上限约束，避免印象分虚高。<b>四级与六级共用同一档位</b>，但六级对严重错误密度、句式单一和用词泛化的容忍度更低，同等水平下分数会更严。</div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* engine.js inlined for single-file sharing */
+/* CET-4/6 翻译智能批改 · 判分引擎
+ * 依据：全国大学英语四、六级考试翻译部分 15 分制总体评分法（档位评分 + 语言错误约束）
+ * 设计原则：可解释、可复现、可校准。所有扣分都带位置与理由，不做"黑箱给分"。
+ */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  root.CETGrader = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  /* ---------------- 官方档位 ---------------- */
+  const BANDS = [
+    { min: 13, max: 15, label: '13–15 分', desc: '译文准确表达原文的意思，用词贴切，行文流畅，基本上无语言错误，仅有个别小错。' },
+    { min: 10, max: 12, label: '10–12 分', desc: '译文基本准确表达原文的意思，文字通顺、连贯，有少量语言错误。' },
+    { min: 7, max: 9, label: '7–9 分', desc: '译文勉强表达原文的意思，文字基本连贯，有较多语言错误，其中有些是严重错误。' },
+    { min: 4, max: 6, label: '4–6 分', desc: '译文仅表达了一小部分原文的意思，文字不连贯，有大量语言错误。' },
+    { min: 1, max: 3, label: '1–3 分', desc: '译文支离破碎，除个别词语或句子外，基本上没有表达原文的意思。' },
+    { min: 0, max: 0, label: '0 分', desc: '白卷、与题目无关或完全无法辨认。' }
+  ];
+
+  /* ---------------- 考试级别（四级 / 六级） ----------------
+   * 两级别共用同一套官方档位描述，但“达标要求”不同：
+   * 四级：句子完整、信息不漏、基础语法正确即可进 10–12 档；
+   * 六级：原文更长、句式与用词要求更高，同等错误量下档位上限更严。
+   */
+  const EXAMS = {
+    cet4: {
+      id: 'cet4', name: '四级', en: 'CET-4',
+      length: '原文约 140–160 字，建议译文 110–150 词',
+      focus: '先译全、再译对：句子完整、信息不漏、主谓一致与时态正确',
+      shortRatio: 0.45,
+      accCaps: [[78, 12], [55, 9], [30, 7]],
+      perfect: { cov15: 88, ratio15: 0.8, cov14: 90 },
+      simpleCap: 0
+    },
+    cet6: {
+      id: 'cet6', name: '六级', en: 'CET-6',
+      length: '原文约 180–200 字，建议译文 150–190 词',
+      focus: '既译得对，也要译得好：句式多样、用词精准、衔接自然，错误密度更低',
+      shortRatio: 0.5,
+      accCaps: [[85, 12], [68, 9], [45, 7]],
+      perfect: { cov15: 92, ratio15: 0.85, cov14: 92 },
+      simpleCap: 13
+    }
+  };
+
+  const STOP = new Set(('a an the and or but if so because although though while when as of to in on at by for with from into onto about over under between among during before after since until through without within against toward towards across along around behind beyond upon via per than then that this these those there here is are was were be been being am do does did done have has had having will would shall should can could may might must not no nor none very more most much many some any few little all both each every either neither other another such own same just only also even still yet ever never always often sometimes usually really quite rather too well get got go going gone come came coming make made making take took taken say said see seen look looked like liked want wanted need needed know known think thought use used using find found give given tell told work worked call called try tried ask asked feel felt become became leave left put mean meant keep kept let begin began seem seemed help helped show showed hear heard play played run ran move moved live lived believe believed bring brought happen happened write wrote sit stood stand lose lost pay paid meet met include included continue continued set learn learned change changed lead led understand understood watch watched follow followed stop stopped create created speak spoke read allow allowed add spend spent grow grew open walk win offer remember love consider appear buy wait serve die send expect build stay fall cut reach kill remain suggest raise pass sell require report decide pull return explain hope develop carry break receive agree support hit produce eat cover catch draw choose cause point listen realize plan drive appear').split(' '));
+  STOP.clear();
+  ('a an the and or but if so because although though while when as of to in on at by for with from into onto about over under between among during before after since until through without within against toward towards across along around behind beyond upon via per than then that this these those there here is are was were be been being am do does did done have has had having will would shall should can could may might must not no nor none very more most much many some any few little all both each every either neither other another such own same just only also even still yet ever never always often sometimes usually really quite rather too well i you he she it we they me him her us them my your his its our their who whom which what where how why one').split(' ').forEach(w => STOP.add(w));
+
+  const VERBS = new Set(('is am are was were be been being do does did have has had will would shall should can could may might must go goes went make makes made take takes took say says said see sees saw think thinks thought know knows knew want wants wanted need needs needed live lives lived come comes came work works worked study studies studied play plays played like likes liked look looks looked feel feels felt seem seems seemed believe believes believed consider considers considered develop develops developed become becomes became help helps helped use uses used show shows showed give gives gave get gets got find finds found keep keeps kept let lets let begin begins began bring brings brought happen happens happened write writes wrote stand stands stood meet meets met include includes included continue continues continued set sets set learn learns learned change changes changed lead leads led understand understands understood follow follows followed stop stops stopped create creates created speak speaks spoke read reads read allow allows allowed add adds added spend spends spent grow grows grew open opens opened walk walks walked win wins won offer offers offered remember remembers remembered love loves loved wait waits waited serve serves served die dies died send sends sent expect expects expected build builds built stay stays stayed reach reaches reached return returns returned explain explains explained hope hopes hoped carry carries carried break breaks broke receive receives received agree agrees agreed support supports supported produce produces produced eat eats ate choose chooses chose drive drives drove').split(' '));
+
+  const THIRD = { go: 'goes', do: 'does', have: 'has', make: 'makes', take: 'takes', say: 'says', think: 'thinks', know: 'knows', want: 'wants', need: 'needs', live: 'lives', come: 'comes', work: 'works', study: 'studies', play: 'plays', like: 'likes', look: 'looks', feel: 'feels', seem: 'seems', believe: 'believes', consider: 'considers', develop: 'develops', become: 'becomes', help: 'helps', use: 'uses', show: 'shows', give: 'gives', get: 'gets', find: 'finds', see: 'sees', let: 'lets', improve: 'improves', provide: 'provides', bring: 'brings', grow: 'grows', mean: 'means', represent: 'represents', argue: 'argues', suggest: 'suggests', agree: 'agrees', offer: 'offers', remain: 'remains', change: 'changes', affect: 'affects', influence: 'influences', continue: 'continues', matter: 'matters', carry: 'carries', cover: 'covers', include: 'includes', attract: 'attracts', serve: 'serves', stand: 'stands', exist: 'exists', belong: 'belongs' };
+
+  const COMMON = ('about above accept according across activity actual add advice affect after again against age ago agree air all allow almost alone along already also always among amount and animal another answer any anyone anything appear apply area argue arm around arrive art article as ask at attack attention author available avoid away baby back bad bag ball bank base be beauty because become bed before begin behavior behind believe benefit best better between beyond big bill bit black blood blue board body book born both box boy break bring brother build business but buy by call camera can capital car care carry case catch cause cell center century certain chair challenge chance change character check child choice choose church citizen city class clear close coach cold collection college color come common community company compare computer concern condition conference consider contain continue control cost could country couple course court cover create crime cultural culture cup current customer cut dark data daughter day dead deal death debate decade decide decision deep defense degree describe design despite detail determine develop die difference different difficult dinner direction discover discuss disease do doctor dog door down draw dream drive drop drug during each early east easy eat economic economy edge education effect effort eight either election else employee end energy enjoy enough enter entire environment environmental especially establish even evening event ever every everyone everything evidence exactly example executive exist expect experience expert explain eye face fact factor fail fall family far fast father fear federal feel feeling few field fight figure fill film final finally find fine finger finish fire firm first fish five floor fly focus follow food foot for force foreign forget form former forward four free friend from front full fund future game garden general generation get girl give glass go goal good government great green ground group grow growth guess gun guy hair half hand hang happen happy hard have he head health hear heart heat heavy help her here herself high him himself his history hit hold home hope hospital hot hotel hour house how however huge human hundred husband idea identify if image imagine impact important improve in include including increase indeed indicate individual industry information inside instead institution interest interesting international interview into investment involve issue it item its itself job join just keep key kid kill kind kitchen know knowledge land language large last late later laugh law lawyer lay lead leader learn least leave left leg legal less let letter level lie life light like likely line listen little live local long look lose loss lot love low machine magazine main maintain major make man manage management manager many market marriage material matter may maybe me mean measure media medical meet meeting member memory mention message method middle might military million mind minute miss mission model modern moment money month more morning most mother mouth move movement movie much music must my myself name nation national natural nature near nearly necessary need network never new news newspaper next nice night no none nor north not note nothing notice now number occur of off offer office officer official often oil ok old on once one only open operation opportunity option or order organization other others our out outside over own owner page pain painting paper parent part participant particular particularly partner party pass past patient pattern pay peace people per perform perhaps period person personal phone physical pick picture piece place plan plant play player point police policy political poor popular population position positive possible power practice prepare present president pressure pretty prevent price private probably problem process produce product production professional program project property protect prove provide public pull purpose push put quality question quickly quite race radio raise range rate rather reach read ready real reality realize really reason receive recent recently recognize record red reduce reflect region relate relationship religious remain remember remove report represent require research resource respond response responsibility rest result return reveal rich right rise risk road rock role room rule run safe same save say scene school science scientist score sea season seat second section security see seek seem sell send senior sense series serious serve service set seven several shake share she shoot short should shoulder show side sign significant similar simple simply since sing single sister sit site situation six size skill small smile so social society soldier some somebody someone something sometimes son song soon sort sound source south space speak special specific speech spend sport spring staff stage stand standard star start state station stay step still stock stop store story strategy street strong structure student study stuff style subject success successful such suddenly suffer suggest summer support sure surface system table take talk task tax teach teacher team technology television tell ten tend term test than thank that the their them themselves then theory there these they thing think third this those though thought thousand threat three through throughout throw thus time to today together tonight too top total tough toward town trade traditional training travel treat treatment tree trial trip trouble true truth try turn two type under understand unit until up upon us use usually value various very victim view violence visit voice vote wait walk wall want war watch water way we weapon wear week weight well west what whatever when where whether which while white who whole whom whose why wide wife will win wind window wish with within without woman wonder word work worker world worry would write writer wrong yard yeah year yes yet you young your yourself').split(' ');
+  const KNOWN = new Set(COMMON);
+  ('analyse analysis approach assess assume attitude average aware balance basic believe benefit branch budget campaign capable career category challenge circumstance claim comment communicate community compare competition complete complex concentrate concept conclude conduct confidence conflict consequence considerable consist constant consume contemporary context contract contrast contribute convenient conventional convince cooperate corporate creative crisis critical cultural curious debate decline define definitely deliver demand demonstrate deny depend describe deserve desire despite detail device digital direct discipline display distance distinguish distribute diverse domestic dramatic due economic efficient eliminate emerge emotion emphasize enable encourage engage enhance ensure enterprise entire environment equal equipment essential establish estimate evaluate eventually evidence evolve exchange expand expense experiment explore expose express extend external extreme facility factor familiar feature financial flexible focus forbid forecast formal fortune foundation frequent function fundamental generate genuine global govern gradual grant guarantee guideline handle harmony household identify ignore illustrate imagine immediate implement imply impress incident independent indicate influence initial innovate insight inspire install instance institute insurance intend intense interpret invest investigate involve isolate issue journey judge justify knowledge labor launch layer legal leisure license likely limit link locate maintain majority manage manufacture mature maximum measure mechanic media mental mention method migrate minimum minor modify monitor moral motive negative neglect negotiate normal notice notify obtain obvious occupy occur offer operate opinion opportunity oppose option ordinary organize origin outcome output overall participate particular passion patient perceive percent perform permanent permit persist perspective phase phenomenon physical policy portion possess potential practical precise predict prefer prejudice prepare preserve previous principle priority procedure proceed profession profit prohibit promote prompt proof propose prosper provide psychology publish purchase pursue qualify quantity quote random range rapid rare rate react realize reasonable recall recommend recover reduce refer reflect reform refuse regard region register regret regular regulation reject relate release relevant reliable relief religion rely remain remark remind remote remove repair replace represent require rescue research reserve resist resolve resource respond responsible restore restrict retain reveal review revolution reward routine rural satisfy scale scene schedule scheme scope section secure seek select sense sensitive sentence separate sequence series serious session settle severe shift shortage signal significant similar simplify sincere situation skill slight solution solve source specific stable standard status steady strategy stress strict structure struggle submit substitute sufficient suggest suitable summary supply support suppose surface survive suspect sustain switch symbol system talent target task technique technology temporary tend tendency tension theory threaten tolerate trace tradition transfer transform transport trend typical ultimate unique universal urban urge valuable variety various vehicle version victim view violate virtual visible vital volume wealth weapon welfare wonder workforce worth ' +
+    'apple book car city country day dream family food friend future hand happy health history house idea job land language life love man money music nature news people person school science society story student teacher time water word work world year').split(' ');
+  COMMON.forEach(w => KNOWN.add(w));
+
+  const GENERIC = new Set(('people person persons many much more most some any good bad big small thing things way ways time times year years day days lot lots very new old first last important different same other another').split(' '));
+  const SYN = {
+    railway: 'rail', train: 'rail', trains: 'rail', rail: 'rail', rails: 'rail',
+    rapid: 'fast', rapidly: 'fast', quick: 'fast', quickly: 'fast', faster: 'fast', fast: 'fast',
+    tourist: 'tourist', tourists: 'tourist', visitor: 'tourist', visitors: 'tourist', traveler: 'tourist', travellers: 'tourist',
+    study: 'study', learn: 'study', learner: 'study', student: 'student',
+    course: 'course', courses: 'course', class: 'course', classes: 'course', lesson: 'course', lessons: 'course',
+    job: 'work', jobs: 'work', career: 'work',
+    big: 'big', large: 'big', huge: 'big',
+    important: 'important', significant: 'important', crucial: 'important', key: 'important',
+    help: 'help', assist: 'help', support: 'help',
+    use: 'use', using: 'use', utilize: 'use', utilize2: 'use',
+    get: 'get', obtain: 'get', acquire: 'get', gain: 'get',
+    show: 'show', display: 'show', indicate: 'show',
+    need: 'need', require: 'need', demand: 'need',
+    start: 'start', begin: 'start', beginning: 'start',
+    protect: 'protect', protecting: 'protect', protection: 'protect', preserve: 'protect',
+    environment: 'environment', environmental: 'environment',
+    culture: 'culture', cultural: 'culture',
+    tradition: 'tradition', traditional: 'tradition',
+    nation: 'nation', national: 'nation',
+    economy: 'economy', economic: 'economy',
+    technology: 'technology', technological: 'technology',
+    education: 'education', educational: 'education',
+    communicate: 'communicate', communication: 'communicate', communicate2: 'communicate',
+    result: 'outcome', results: 'outcome', outcome: 'outcome', outcomes: 'outcome',
+    effect: 'outcome', effects: 'outcome'
+  };
+  const canon = w => SYN[stem(w)] || stem(w);
+  const MISSPELL = { recieve: 'receive', enviroment: 'environment', goverment: 'government', developement: 'development', sucess: 'success', benifit: 'benefit', knowlege: 'knowledge', occured: 'occurred', seperate: 'separate', definately: 'definitely', thier: 'their', becuase: 'because', alot: 'a lot', untill: 'until', wich: 'which', teh: 'the', adn: 'and', importent: 'important', cultrue: 'culture', traditon: 'tradition', technolgy: 'technology', socity: 'society', diffrent: 'different', eduction: 'education', responsibel: 'responsible', achive: 'achieve', oppotunity: 'opportunity', challange: 'challenge', comunication: 'communication', competive: 'competitive', gobal: 'global', modren: 'modern', quility: 'quality', varity: 'variety', atractive: 'attractive', convient: 'convenient', neccessary: 'necessary', accross: 'across', amoung: 'among', arguement: 'argument', basicly: 'basically', begining: 'beginning', calender: 'calendar', comming: 'coming', existance: 'existence', familar: 'familiar', foriegn: 'foreign', fourty: 'forty', happend: 'happened', immediatly: 'immediately', independant: 'independent', intrest: 'interest', langauge: 'language', liesure: 'leisure', maintainance: 'maintenance', managment: 'management', millenium: 'millennium', noticable: 'noticeable', occassion: 'occasion', posession: 'possession', prefered: 'preferred', priviledge: 'privilege', probaly: 'probably', proffesional: 'professional', refered: 'referred', relevent: 'relevant', religous: 'religious', remeber: 'remember', resistence: 'resistance', succesful: 'successful', suprise: 'surprise', tommorow: 'tomorrow', wierd: 'weird', writting: 'writing', studing: 'studying', studens: 'students', peopel: 'people', becouse: 'because', offen: 'often', reallly: 'really', ecconomic: 'economic', envierment: 'environment', mentain: 'maintain' };
+
+  /* ---------------- 文本工具 ---------------- */
+  const words = t => (t.match(/[A-Za-z][A-Za-z'’-]*/g) || []);
+  const lowerWords = t => words(t).map(w => w.toLowerCase().replace(/[’']s$/, '').replace(/[’']/g, ''));
+  function sentences(text) {
+    const out = []; let buf = ''; let start = 0;
+    for (let i = 0; i < text.length; i++) {
+      buf += text[i];
+      if (/[.!?。！？\n]/.test(text[i])) {
+        if (buf.trim()) out.push({ text: buf.trim(), start });
+        buf = ''; start = i + 1;
+      }
+    }
+    if (buf.trim()) out.push({ text: buf.trim(), start });
+    return out;
+  }
+  function stem(w) {
+    if (w.length > 4 && /ies$/.test(w)) return w.slice(0, -3) + 'y';
+    if (w.length > 3 && /(ches|shes|sses|xes)$/.test(w)) return w.slice(0, -2);
+    if (w.length > 3 && /s$/.test(w) && !/ss$/.test(w)) return w.slice(0, -1);
+    return w;
+  }
+  function lev(a, b, max) {
+    if (Math.abs(a.length - b.length) > max) return max + 1;
+    const prev = new Array(b.length + 1);
+    for (let j = 0; j <= b.length; j++) prev[j] = j;
+    for (let i = 1; i <= a.length; i++) {
+      let cur = [i], left = i, best = i;
+      for (let j = 1; j <= b.length; j++) {
+        const v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        cur.push(v); best = Math.min(best, v);
+      }
+      if (best > max) return max + 1;
+      for (let j = 0; j <= b.length; j++) prev[j] = cur[j];
+      left = best;
+    }
+    return prev[b.length];
+  }
+
+  /* ---------------- 规则表 ---------------- */
+  const COLLOC = [
+    { re: /\bvery\s+like\b/gi, fix: 'like', why: '"very like" 是典型中式表达，英语用 like ... very much / really like。', tag: '中式英语', sev: 'major' },
+    { re: /\bhow\s+to\s+say\b/gi, fix: 'how do you say', why: 'how to say 不能单独作谓语，应改为 how do you say 或 how to express。', tag: '中式英语', sev: 'major' },
+    { re: /\bopen\s+(the\s+)?light\b/gi, fix: 'turn on the light', why: '开灯固定搭配为 turn on the light。', tag: '搭配', sev: 'major' },
+    { re: /\bclose\s+(the\s+)?light\b/gi, fix: 'turn off the light', why: '关灯固定搭配为 turn off the light。', tag: '搭配', sev: 'major' },
+    { re: /\b(learn|learns|learning|learned|learnt)\s+knowledge\b/gi, fix: 'acquire knowledge', why: '英语中不说 learn knowledge，应为 acquire / gain knowledge。', tag: '搭配', sev: 'major' },
+    { re: /\bbig\s+rain\b/gi, fix: 'heavy rain', why: '大雨是 heavy rain，不是 big rain。', tag: '搭配', sev: 'major' },
+    { re: /\beat\s+medicine\b/gi, fix: 'take medicine', why: '服药是 take medicine。', tag: '搭配', sev: 'major' },
+    { re: /\bplay\s+(the\s+)?computer\b/gi, fix: 'use the computer', why: '玩电脑应表达为 use / spend time on the computer。', tag: '搭配', sev: 'major' },
+    { re: /\bdiscuss\s+about\b/gi, fix: 'discuss', why: 'discuss 是及物动词，后面不加 about。', tag: '搭配', sev: 'major' },
+    { re: /\bemphasi[sz]e\s+on\b/gi, fix: 'emphasize', why: 'emphasize 及物，不加 on（名词 emphasis 才接 on）。', tag: '搭配', sev: 'major' },
+    { re: /\bdepend\s+of\b/gi, fix: 'depend on', why: '固定搭配 depend on。', tag: '搭配', sev: 'major' },
+    { re: /\barrive\s+to\b/gi, fix: 'arrive at', why: 'arrive at（小地点）/ arrive in（大地点），不用 to。', tag: '搭配', sev: 'major' },
+    { re: /\bmarried\s+with\b/gi, fix: 'married to', why: '固定搭配 be married to sb.。', tag: '搭配', sev: 'major' },
+    { re: /\bin\s+the\s+other\s+hand\b/gi, fix: 'on the other hand', why: '固定表达 on the other hand。', tag: '搭配', sev: 'minor' },
+    { re: /\bon\s+(19|20)\d\d\b/gi, fix: null, why: '年份前用介词 in，如 in 2020。', tag: '介词', sev: 'minor', fixer: m => 'in ' + m.slice(3) },
+    { re: /\bin\s+(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|January|February|March|April|May|June|July|August|September|October|November|December)\b/gi, fix: null, why: '具体某天/月份前的介词用法：on + 星期，in + 月份。', tag: '介词', sev: 'minor', fixer: m => (/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/i.test(m.slice(3)) ? 'on ' : 'in ') + m.slice(3) },
+    { re: /\bmake\s+a\s+progress\b/gi, fix: 'make progress', why: 'progress 不可数，不说 a progress。', tag: '搭配', sev: 'minor' },
+    { re: /\bmany\s+a?\s*informations?\b/gi, fix: 'much information', why: 'information 不可数，用 much information。', tag: '名词单复数', sev: 'major' },
+    { re: /\bmuch\s+people\b/gi, fix: 'many people', why: 'people 可数复数，用 many people。', tag: '名词单复数', sev: 'major' },
+    { re: /\baccording\s+to\s+me\b/gi, fix: 'in my opinion', why: 'according to 后接他人/资料，表达自己观点用 in my opinion。', tag: '中式英语', sev: 'minor' },
+    { re: /\bin\s+my\s+opinion\s*,?\s*I\s+think\b/gi, fix: 'In my opinion', why: '语义重复，二者保留其一。', tag: '中式英语', sev: 'minor' },
+    { re: /\b(although|though)\b([^.!?]{0,80}?)\bbut\b/gi, fix: null, why: 'although 与 but 不能连用，保留 although 即可。', tag: '句式', sev: 'major', fixer: m => m.replace(/,?\s*but\s*/i, ' ') },
+    { re: /\bbecause\b([^.!?]{0,80}?)\bso\b/gi, fix: null, why: 'because 与 so 不能连用，保留 because。', tag: '句式', sev: 'major', fixer: m => m.replace(/,?\s*so\s*/i, ' ') },
+    { re: /\bno\s+matter\b([^.!?]{0,80}?)\bbut\b/gi, fix: null, why: 'no matter 引导的从句后不再用 but。', tag: '句式', sev: 'major', fixer: m => m.replace(/,?\s*but\s*/i, ' ') },
+    { re: /\b(more|most)\s+(better|worse|easier|harder|faster|slower|bigger|smaller|higher|lower|greater|fewer|less)\b/gi, fix: null, why: '比较级不能再用 more/most 修饰，直接保留 better 等即可。', tag: '搭配', sev: 'major', fixer: m => m.split(/\s+/)[1] },
+    { re: /\bin\s+(young\s+people|the\s+young|people|students)\b/gi, fix: null, why: '表示"在……当中受欢迎/流行"用 among。', tag: '介词', sev: 'minor', fixer: m => 'among ' + m.replace(/^in\s+/i, '') },
+    { re: /\b(culture|nation|tradition|environment|economy|education|technology)\s+(confidence|heritage|development|awareness|protection|values|identity|industry|system|level)\b/gi, fix: null, why: '名词作定语不地道，此处应使用形容词形式（culture → cultural 等）。', tag: '搭配', sev: 'major', fixer: m => ({ culture: 'cultural', nation: 'national', tradition: 'traditional', environment: 'environmental', economy: 'economic', education: 'educational', technology: 'technological' }[m.split(/\s+/)[0].toLowerCase()] || m.split(/\s+/)[0]) + ' ' + m.split(/\s+/).slice(1).join(' ') },
+    { re: /\bget\s+fun\b/gi, fix: 'have fun', why: '固定表达 have fun（with sth.），不用 get fun。', tag: '搭配', sev: 'minor' },
+    { re: /\bbetween\s+(young\s+people|people|students|many|several|various)\b/gi, fix: null, why: '表示"在……当中"用 among；between 只用于两者之间。', tag: '介词', sev: 'minor', fixer: m => 'among ' + m.replace(/^between\s+/i, '') },
+    { re: /\b(start|starts|started)\s+from\s+(the\s+)?(small|little)\s+things?\b/gi, fix: null, why: '"从小事做起"用 start with small things。', tag: '搭配', sev: 'minor', fixer: m => m.replace(/from/i, 'with') },
+    { re: /\bfor\s+(experience|visit|see|learn|buy|take|enjoy)\s+(it|them|this|that|us|me)\b/gi, fix: null, why: '表示目的用不定式 to do，不用 for + 动词。', tag: '结构', sev: 'major', fixer: m => m.replace(/^for/i, 'to') },
+    { re: /\b(develop|develops|developed|grow|grows|grew|increase|increases|increased|change|changes|changed|go|goes|went|travel|travels|walk|run|speak|talk|work|study|learn)\s+(very|so|too|more)\s+(quick|easy|slow|careful|clear|serious|real|different|good)\b/gi, fix: null, why: '修饰动词要用副词形式（quick → quickly，easy → easily，good → well）。', tag: '搭配', sev: 'minor', fixer: m => { const adv = { quick: 'quickly', easy: 'easily', slow: 'slowly', careful: 'carefully', clear: 'clearly', serious: 'seriously', real: 'really', different: 'differently', good: 'well' }[m.split(/\s+/).pop().toLowerCase()] || m.split(/\s+/).pop() + 'ly'; return m.replace(/\w+$/, adv); } },
+    { re: /\b(musics|equipments|advices|informations|knowledges|furnitures|researches|progresses|homeworks|newses)\b/gi, fix: null, why: '该词为不可数名词，不能加 -s。', tag: '名词单复数', sev: 'major', fixer: m => m.replace(/es$|s$/, '') }
+  ];
+
+  const ARTICLE_EX_A = new Set(['one', 'once', 'university', 'unique', 'user', 'users', 'useful', 'usual', 'united', 'european', 'uniform', 'universal', 'unit', 'union', 'euro', 'eulogy', 'one-time']);
+  const ARTICLE_EX_AN = new Set(['hour', 'hours', 'honest', 'honor', 'honour', 'mba', 'x-ray', 'fbi', 'mp']);
+
+  /* ---------------- 判分 ---------------- */
+  function evaluate(input) {
+    const exam = input.exam === 'cet6' ? 'cet6' : 'cet4';
+    const P = EXAMS[exam];
+    const transcript = (input.transcript || '').replace(/\r/g, '');
+    const reference = input.reference || '';
+    const errors = [];
+    const text = transcript;
+    const push = (type, sev, start, end, snippet, fix, why) => {
+      errors.push({ type, sev, start, end, snippet, fix, why });
+    };
+
+    /* 1) 中文残留 */
+    let re = /[\u4e00-\u9fa5]+/g, m;
+    while ((m = re.exec(text))) push('中文残留', 'major', m.index, m.index + m[0].length, m[0], null, '译文出现中文，考试中该部分不得分，须全部译成英文。');
+
+    /* 2) 中文标点 */
+    const PUNCT = { '，': ',', '。': '.', '；': ';', '：': ':', '！': '!', '？': '?', '、': ',', '“': '"', '”': '"', '‘': "'", '’': "'", '（': '(', '）': ')' };
+    re = /[，。；：！？、“”‘’（）]/g;
+    while ((m = re.exec(text))) push('标点', 'minor', m.index, m.index + 1, m[0], PUNCT[m[0]] || null, '英语篇章须使用英文标点。');
+
+    /* 3) 冠词 */
+    re = /\b([Aa])\s+([A-Za-z]+)/g;
+    while ((m = re.exec(text))) {
+      const w = m[2].toLowerCase();
+      if (/^[aeiou]/.test(w) && !ARTICLE_EX_A.has(w) && !/^[A-Z]{2,}/.test(m[2])) {
+        push('冠词', 'minor', m.index, m.index + m[0].length, m[0], 'an ' + m[2], '元音音素开头的词前用 an。');
+      }
+      if (/^(hour|honest|honor|honour)/.test(w)) push('冠词', 'minor', m.index, m.index + m[0].length, m[0], 'an ' + m[2], 'h 不发音，用 an。');
+    }
+    re = /\b([Aa]n)\s+([A-Za-z]+)/g;
+    while ((m = re.exec(text))) {
+      const w = m[2].toLowerCase();
+      if (/^[bcdfgjklmnpqrstvwxyz]/.test(w) && !ARTICLE_EX_AN.has(w)) {
+        push('冠词', 'minor', m.index, m.index + m[0].length, m[0], 'a ' + m[2], '辅音音素开头的词前用 a。');
+      }
+    }
+
+    /* 4) 主谓一致 */
+    re = /\b(he|she|it)\s+(go|do|have|make|take|say|think|know|want|need|live|come|work|study|play|like|look|feel|seem|believe|consider|develop|become|help|use|show|give|get|find|see)\b/gi;
+    while ((m = re.exec(text))) {
+      if (/^it\s+(is|was|has|does)$/i.test(m[0])) continue;
+      const s = m[1], v = m[2].toLowerCase();
+      push('主谓一致', 'major', m.index, m.index + m[0].length, m[0], s + ' ' + (THIRD[v] || v + 's'), '第三人称单数主语，谓语动词要加 -s/-es。');
+    }
+    re = /\b(people|children|students|they|we|you)\s+(is|was|has)\b/gi;
+    while ((m = re.exec(text))) {
+      const fix = { is: 'are', was: 'were', has: 'have' }[m[2].toLowerCase()];
+      push('主谓一致', 'major', m.index, m.index + m[0].length, m[0], m[1] + ' ' + fix, '复数主语须搭配复数谓语。');
+    }
+    re = /\b(everyone|everybody|someone|somebody|anyone|anybody|nobody|each)\s+(are|were|have)\b/gi;
+    while ((m = re.exec(text))) {
+      const fix = { are: 'is', were: 'was', have: 'has' }[m[2].toLowerCase()];
+      push('主谓一致', 'major', m.index, m.index + m[0].length, m[0], m[1] + ' ' + fix, '不定代词作主语视为单数。');
+    }
+    const BASE = { goes: 'go', does: 'do', has: 'have', makes: 'make', takes: 'take', begins: 'begin', starts: 'start', wants: 'want', needs: 'need', likes: 'like', thinks: 'think', knows: 'know', plays: 'play', studies: 'study', works: 'work', lives: 'live', comes: 'come', gets: 'get', seems: 'seem', believes: 'believe', helps: 'help', uses: 'use', shows: 'show', gives: 'give', finds: 'find', sees: 'see', becomes: 'become', develops: 'develop', considers: 'consider' };
+    re = /\b(people|students|children|they|we|you)\s+(goes|does|has|makes|takes|begins|starts|wants|needs|likes|thinks|knows|plays|studies|works|lives|comes|gets|seems|believes|helps|uses|shows|gives|finds|sees|becomes|develops|considers)\b/gi;
+    while ((m = re.exec(text))) {
+      const v = m[2].toLowerCase();
+      push('主谓一致', 'major', m.index, m.index + m[0].length, m[0], m[1] + ' ' + (BASE[v] || v), '复数主语后的谓语动词不加 -s/-es。');
+    }
+    re = /\b(is|are|was|were)\s+(help|improve|strengthen|make|bring|provide|show|develop|change|play|teach|create)\b/gi;
+    while ((m = re.exec(text))) {
+      const v = m[2].toLowerCase();
+      push('结构', 'major', m.index, m.index + m[0].length, m[0], THIRD[v] || v + 's', 'be 动词后不能直接跟实义动词原形，应直接用实义动词（第三人称单数加 -s）。');
+    }
+    const SUBJ = 'society|culture|technology|education|economy|environment|government|country|city|development|tradition|history|phenomenon|expert|student|teacher|world|life|industry|confidence|travel|tourism|internet|net|rail|railway|train|course|service|system|project|plan|problem|result|change|number|company|school|university|museum|park|region|area|village|town|market|product|brand|platform|exam|test|score|grade|event|activity|program|policy|law|issue|topic|passage|author|writer|scientist|doctor|worker';
+    re = new RegExp('\\b(' + SUBJ + ')\\s+(are|were)\\b', 'gi');
+    while ((m = re.exec(text))) {
+      const fix = m[2].toLowerCase() === 'are' ? 'is' : 'was';
+      push('主谓一致', 'major', m.index, m.index + m[0].length, m[0], m[1] + ' ' + fix, '单数名词作主语，be 动词用 is / was。');
+    }
+    re = new RegExp('\\b(' + SUBJ + ')\\s+(become|make|have|take|play|help|show|develop|provide|bring|grow|improve|change|need|want|mean|seem|represent|think|believe|say|consider|argue|suggest|agree|let|work|offer|remain|break|solve|attract|cover|include|affect|influence|continue|matter|determine|shape)\\b', 'gi');
+    while ((m = re.exec(text))) {
+      const v = m[2].toLowerCase();
+      push('主谓一致', 'major', m.index, m.index + m[0].length, m[0], m[1] + ' ' + (THIRD[v] || v + 's'), '单数名词作主语，谓语动词要用第三人称单数形式。');
+    }
+    /* 主题名词（节日 / 书法 / 建筑…）作主语时谓语误用复数形式 */
+    const TOPIC_SINGULAR = ('festival calligraphy poem poetry building wall language skill habit custom ceremony performance painting music song dance craft art artist writer heritage site tourist visitor traveler consumer customer employee citizen resident farmer worker engineer designer inventor creator reader listener viewer user player winner leader manager owner founder member participant volunteer patient doctor nurse scientist researcher professor graduate teenager adult elder foreigner stranger neighbor friend parent mother father son daughter brother sister wife husband baby girl boy woman man person group class family community organization institution department agency firm enterprise business shop store restaurant hotel hospital library theater cinema gym stadium airport station port bridge tunnel dam tower palace temple garden forest river lake mountain island coast desert field farm factory office apartment house room kitchen street road highway path route line network platform website device machine tool material product brand market price cost income salary budget tax policy rule regulation law court case crime punishment war peace army soldier weapon disease medicine treatment health exercise diet sleep stress emotion mood memory dream goal plan idea opinion view attitude belief value virtue quality ability talent effort success failure challenge opportunity competition cooperation communication conversation discussion argument debate speech lecture lesson course subject major degree diploma certificate exam score grade homework assignment project research experiment data result finding conclusion report article essay novel story film movie play show concert exhibition museum gallery holiday vacation trip journey tour adventure experience tradition ritual culture civilization history era dynasty emperor scholar expert master musician painter poet novelist director actor actress singer dancer athlete coach captain hero king queen prince princess god spirit religion philosophy literature word sentence phrase grammar pronunciation accent translation meaning message information knowledge wisdom truth fact reality future past present century decade generation age childhood youth adulthood marriage birth death life world earth sky sun moon star planet space nature climate weather season spring summer autumn winter rain snow wind storm flood drought earthquake fire water air soil energy resource environment pollution waste recycling transport traffic vehicle bicycle bus train subway plane ship car city town village country nation government president official society public population education school university college student teacher job career work office company meeting industry trade investment bank money cash payment profit loss service advertisement marketing technology internet robot computer phone camera screen software hardware system email video photo image game entertainment fashion style beauty sport match champion medal record').split(' ');
+    re = new RegExp('\\b(' + TOPIC_SINGULAR.join('|') + ')\\s+(have|are|were|carry|play|provide|represent|remain|include|cover|attract|serve|stand|exist|belong|matter|come|become|develop|show|help|need|want|make|take)\\b', 'gi');
+    while ((m = re.exec(text))) {
+      /* 排除 with 独立结构、不定式、使役/感官动词后的宾补（with the Internet develop / make my dream come true） */
+      const before = text.slice(Math.max(0, m.index - 28), m.index).toLowerCase();
+      if (/\b(with|to|make|makes|made|let|lets|help|helps|helped|have|has|had|see|sees|saw|watch|watches|hear|hears|heard|feel|feels|felt|keep|keeps|kept)\s+(?:the|a|an|his|her|my|their|our|its|your|this|that|these|those)?\s*$/.test(before)) continue;
+      const v = m[2].toLowerCase();
+      push('主谓一致', 'major', m.index, m.index + m[0].length, m[0], m[1] + ' ' + (THIRD[v] || v + 's'), '单数名词作主语，谓语要用第三人称单数形式。');
+    }
+    re = /\bthere\s+is\s+(many|several|two|three|four|five|a lot of|lots of|few)\b/gi;
+    while ((m = re.exec(text))) push('主谓一致', 'major', m.index, m.index + m[0].length, m[0], 'there are ' + m[1], 'there be 句型中 be 与后面的名词一致。');
+    re = /\bthere\s+are\s+(much|a little|little)\b/gi;
+    while ((m = re.exec(text))) push('主谓一致', 'major', m.index, m.index + m[0].length, m[0], 'there is ' + m[1], '不可数名词用 there is。');
+    re = /\b(every|each)\s+(idiom|student|child|family|person|country|city|year|day|word|sentence|problem|question|culture|language|story)\s+(have|do|make|take|play|help|need|want|show|become|develop)\b/gi;
+    while ((m = re.exec(text))) {
+      const v = m[3].toLowerCase();
+      push('主谓一致', 'major', m.index, m.index + m[0].length, m[0], m[1] + ' ' + m[2] + ' ' + (THIRD[v] || v + 's'), 'every / each + 单数名词作主语，谓语用第三人称单数。');
+    }
+    re = /\b(people|students|children|foreigners|tourists|they|we|you|he|she|it|I|[A-Z][a-z]+)\s+(hard|difficult|easy|impossible|necessary|important|convenient)\s+to\s+([a-z]+)\b/g;
+    while ((m = re.exec(text))) {
+      const subj = m[1], adj = m[2], v = m[3];
+      const be = /^(i|he|she|it|[A-Z][a-z]+)$/.test(subj) ? 'is' : 'are';
+      push('结构', 'major', m.index, m.index + m[0].length, m[0], subj + ' ' + be + ' ' + adj + ' to ' + v, '"某人很难做某事"要用 It is adj. for sb. to do 或 sb. is adj. to do，不能省略 be 动词。');
+    }
+    re = /\b(is|are|was|were)\s+(important|essential|necessary|key|major|small|large|big|basic)\s+(part|role|factor|reason|step)\b/gi;
+    while ((m = re.exec(text))) {
+      push('冠词', 'minor', m.index, m.index + m[0].length, m[0], m[1] + ' an ' + m[2] + ' ' + m[3], 'part / role 是可数名词，单数前需加冠词（an important part）。');
+    }
+    re = /\b(idiom|child|children|family|student|people|country|world|company|city)\s+(whole|daily|true|real|own)\s+(life|meaning|history|work|future)\b/gi;
+    while ((m = re.exec(text))) {
+      push('名词单复数', 'major', m.index, m.index + m[0].length, m[0], m[1] + "'s " + m[2] + ' ' + m[3], '表示"……的"要用所有格（\'s）或 of 结构。');
+    }
+    re = /\b(choose|chooses|chose|decide|decides|decided|hope|hopes|hoped|plan|plans|planned|refuse|refuses|agree|agrees|try|tries|tried)\s+(study|learn|go|buy|take|make|find|improve|protect|travel|work|live|join|use|read|write)\b/gi;
+    while ((m = re.exec(text))) {
+      push('结构', 'major', m.index, m.index + m[0].length, m[0], m[1] + ' to ' + m[2], '这些动词后接另一动词时要用不定式 to do。');
+    }
+    re = /\b(everyone|someone|anyone|people|student|students|teacher|teachers|children|child)\s+(duty|responsibility|opinion|idea|right|future|life)\b/gi;
+    while ((m = re.exec(text))) {
+      push('名词单复数', 'major', m.index, m.index + m[0].length, m[0], m[1] + "'s " + m[2], '表示"……的"要用名词所有格（\'s）。');
+    }
+    sentences(text).forEach(s => {
+      const mm = s.text.match(/^([A-Z][a-z]+)\s+([a-z]+)/);
+      if (mm && /^(Protect|Save|Reduce|Learn|Study|Read|Travel|Exercise|Plant)$/.test(mm[1]) && /\b(is|are|was|were|can|will|may)\b/.test(s.text)) {
+        push('结构', 'major', s.start, s.start + mm[0].length, mm[0], mm[1] + 'ing ' + mm[2], '动词原形不能直接作主语，应改为动名词（V-ing）。');
+      }
+    });
+    /* not only 后接形容词却缺系动词：Tea not only good for health ... */
+    re = /\b(not\s+only)\s+((?:very|so|too|more|quite)\s+)?(good|bad|important|useful|helpful|popular|famous|beautiful|difficult|easy|necessary|convenient|flexible|healthy|delicious|common|beneficial)\b/gi;
+    while ((m = re.exec(text))) {
+      const before = text.slice(Math.max(0, m.index - 40), m.index).trim();
+      if (!/\b(?:is|are|was|were|be|been|being|can|could|will|would|may|might|must|should)(?:\s+(?:very|so|too|more|quite))?$/i.test(before)) {
+        push('结构', 'major', m.index, m.index + m[0].length, m[0], 'is ' + m[0], 'not only 后是形容词，主语后缺系动词 be（is / are）。');
+      }
+    }
+    /* 两个谓语动词直接连用：people drink tea have ... / live in cities have ... */
+    re = /\b(people|students|children|Chinese|they|we|he|she|it|[A-Z][a-z]+)\s+(drink|eat|study|live|work|play|go|come|read|write|learn)\s+(?:(?!\b(?:and|but|or|which|who|that|so|because)\b)[\w'-]+\s+){0,3}?(have|has)\s+(more|many|much|a\s+lot|\d)/g;
+    while ((m = re.exec(text))) {
+      push('结构', 'major', m.index, m.index + m[0].length, m[0], m[1] + ' ' + m[2] + ' … and ' + m[3] + ' ' + m[4], '一个分句里出现两个谓语动词，需用 and/定语从句连接，或改为非谓语。');
+    }
+    /* 数字 + years + 名词：a 4,000-year history */
+    re = /\b(\d[\d,]*)\s+years?\s+(?!of\b)(history|experience|study|development)\b/gi;
+    while ((m = re.exec(text))) {
+      push('搭配', 'minor', m.index, m.index + m[0].length, m[0], m[1] + '-year ' + m[2], '“……年的历史/经验”用 a 4,000-year history 或 4,000 years of history。');
+    }
+    /* 国籍/身份形容词前缺冠词：is Chinese national drink */
+    re = /\b(is|was)\s+(Chinese|national)\s+(national\s+)?(drink|food|festival|medicine|symbol|invention)\b/gi;
+    while ((m = re.exec(text))) {
+      push('冠词', 'minor', m.index, m.index + m[0].length, m[0], m[1] + ' the ' + m[2] + ' ' + (m[3] || '') + m[4], '特指某一事物时，名词前需加定冠词 the。');
+    }
+
+    /* 5) 时态 */
+    sentences(text).forEach(s => {
+      const past = /\b(yesterday|last\s+(year|month|week|summer|winter|night)|ago|in\s+the\s+past|used\s+to|in\s+(19|20)\d\d)\b/i.test(s.text);
+      const presentVerb = s.text.match(/\b(is|are|go|goes|make|makes|have|has|do|does|take|takes|become|becomes|play|plays|live|lives|study|studies|work|works|build|builds|develop|develops|choose|chooses)\b/);
+      const pastVerb = /\b(was|were|did|had|went|made|took|became|played|lived|studied|worked|built|developed|chose|has\s+been|have\s+been)\b/i.test(s.text);
+      if (past && presentVerb && !pastVerb) {
+        const idx = s.start + s.text.indexOf(presentVerb[0]);
+        push('时态', 'major', idx, idx + presentVerb[0].length, presentVerb[0], null, '句中有明确过去时间状语，谓语应使用一般过去时。');
+      }
+    });
+
+    /* 6) 搭配 / 中式英语 */
+    COLLOC.forEach(rule => {
+      const r = new RegExp(rule.re.source, rule.re.flags.replace('g', '') + 'g');
+      let mm;
+      while ((mm = r.exec(text))) {
+        const fix = rule.fixer ? rule.fixer(mm[0]) : (rule.fix === null ? null : rule.fix);
+        push(rule.tag, rule.sev, mm.index, mm.index + mm[0].length, mm[0], fix, rule.why);
+        if (mm[0].length === 0) r.lastIndex++;
+      }
+    });
+
+    /* 7) 名词单复数 */
+    const PLURAL = { person: 'people', child: 'children', man: 'men', woman: 'women', foot: 'feet', tooth: 'teeth' };
+    re = /\b(two|three|four|five|six|seven|eight|nine|ten|several|many|few|both)\s+(book|student|year|day|thing|country|city|way|person|child|company|idea|reason|example|problem|teacher|friend|language|culture|technology|opportunity|challenge)\b/gi;
+    while ((m = re.exec(text))) {
+      const n = m[2].toLowerCase();
+      let p = PLURAL[n] || (/y$/.test(n) ? n.slice(0, -1) + 'ies' : /(s|sh|ch|x)$/.test(n) ? n + 'es' : n + 's');
+      push('名词单复数', 'minor', m.index, m.index + m[0].length, m[0], m[1] + ' ' + p, '数量词后接可数名词复数。');
+    }
+    re = /\b(many|few|a\s+few|several)\s+(information|advice|knowledge|equipment|furniture|news|progress|research|homework)\b/gi;
+    while ((m = re.exec(text))) push('名词单复数', 'major', m.index, m.index + m[0].length, m[0], 'much ' + m[2], '不可数名词不能用 many/few 修饰。');
+
+    /* 8) 拼写：高精度策略——只报明确错拼，或"同首字母 + 编辑距离 1"且词形不可由已知识别词派生 */
+    const bases = w => {
+      const s = new Set([w]);
+      const add = x => { if (x && x.length >= 3) s.add(x); };
+      if (/ies$/.test(w)) add(w.slice(0, -3) + 'y');
+      if (/es$/.test(w)) add(w.slice(0, -2));
+      if (/s$/.test(w) && !/ss$/.test(w)) add(w.slice(0, -1));
+      if (/ed$/.test(w)) { add(w.slice(0, -2)); add(w.slice(0, -1)); }
+      if (/ing$/.test(w)) { add(w.slice(0, -3)); add(w.slice(0, -3) + 'e'); }
+      if (/ly$/.test(w)) add(w.slice(0, -2));
+      if (/(.)\1(ed|ing)$/.test(w)) add(w.replace(/(.)\1(ed|ing)$/, '$1'));
+      return s;
+    };
+    const derivable = w => { for (const b of bases(w)) if (KNOWN.has(b)) return true; return false; };
+    const tokens = words(text);
+    const seen = new Set();
+    tokens.forEach(tok => {
+      const w = tok.toLowerCase();
+      if (w.length < 4 || seen.has(w)) return;
+      seen.add(w);
+      const idx = text.toLowerCase().indexOf(w);
+      if (MISSPELL[w]) {
+        push('拼写', 'minor', idx, idx + w.length, tok, MISSPELL[w], '常见拼写错误。');
+        return;
+      }
+      if (derivable(w) || /^[A-Z]/.test(tok) || /^\d/.test(w)) return;
+      let best = null;
+      for (const k of KNOWN) {
+        if (k[0] !== w[0] || w.length < 6 || Math.abs(k.length - w.length) > 1) continue;
+        if (lev(w, k, 1) === 1) { best = k; break; }
+      }
+      if (best) push('拼写', 'minor', idx, idx + w.length, tok, best, `疑似拼写错误，可能应为 ${best}。`);
+    });
+
+    /* 9) 句子结构 */
+    sentences(text).forEach(s => {
+      const sw = words(s.text);
+      if (sw.length >= 1) {
+        const hasVerb = sw.some(w => VERBS.has(w.toLowerCase()) || /(ed|'s)$/.test(w.toLowerCase()));
+        const opener = (sw[0] || '').toLowerCase().replace(/[^a-z]/g, '');
+        const okOneWord = sw.length === 1 && /^(yes|no|however|therefore|besides|moreover|first|second|third|finally|today|now|ok|okay)$/.test(opener);
+        if (!hasVerb && !okOneWord) push('结构', 'major', s.start, s.start + s.text.length, s.text.length > 40 ? s.text.slice(0, 40) + '…' : s.text, null, '该句缺少谓语动词，不是完整的英语句子（片段句）。');
+      }
+      if (sw.length <= 7 && !/,/.test(s.text) && (/^To\s+[a-z]+\s/i.test(s.text)) && !/\b(is|are|was|were|can|will|should|must|may)\b/i.test(s.text.replace(/^To\s+[a-z]+\s/i, ''))) {
+        push('结构', 'major', s.start, s.start + s.text.length, s.text, null, '不定式不能单独成句，缺少主语和谓语。');
+      }
+      if (/^(Should|Must|Can|Will|Would|Could|May|Might)\b/.test(s.text) && sw.length <= 12) {
+        push('结构', 'major', s.start, s.start + s.text.length, s.text, null, '情态动词开头但没有主语，是片段句。');
+      }
+      if (sw.length > 45) {
+        const conj = (s.text.match(/\b(and|but|or|so|because|although|while|when|if|which|that|who|where)\b/gi) || []).length;
+        const commas = (s.text.match(/,/g) || []).length;
+        if (conj < 2 || commas < 2) push('结构', 'major', s.start, s.start + s.text.length, s.text.slice(0, 40) + '…', null, '长句缺少断句或连接词，形成逗号粘连（run-on），建议拆成 2–3 句。');
+      }
+      const which = s.text.match(/,\s*which\s+(makes?|helps?|allows?|gives?|brings?|enables?|provides?)\b/i);
+      if (which) {
+        const at = s.start + which.index;
+        const v = which[1].toLowerCase().replace(/s$/, '').replace(/e$/, '') + 'ing';
+        push('表达', 'minor', at, at + which[0].length, which[0], `, ${v} …`, '非限制性 which 从句指代整句，改用现在分词更紧凑（考场高分句式）。');
+      }
+    });
+
+    /* 10) 重复用词 */
+    const content = lowerWords(text).filter(w => !STOP.has(w) && w.length > 3);
+    const freq = {};
+    content.forEach(w => freq[w] = (freq[w] || 0) + 1);
+    const tWords = words(text).length;
+    Object.keys(freq).forEach(w => {
+      if (freq[w] >= 4 && freq[w] / Math.max(1, tWords) > 0.05) {
+        const idx = text.toLowerCase().indexOf(w);
+        push('用词', 'minor', idx, idx + w.length, w, null, `"${w}" 重复 ${freq[w]} 次，建议换用同义表达或合并句子。`);
+      }
+    });
+
+    /* 10b) 六级专项：句式多样性与用词精准度 */
+    let simpleRatio = 0;
+    if (exam === 'cet6' && tWords >= 50) {
+      const ss = sentences(text);
+      const simpleSents = ss.filter(s => {
+        const n = words(s.text).length;
+        return n <= 9 && !/\b(and|but|or|so|because|although|while|when|if|which|that|who|where|however|therefore|not only)\b/i.test(s.text);
+      });
+      simpleRatio = ss.length ? simpleSents.length / ss.length : 0;
+      if (ss.length >= 5 && simpleRatio >= 0.7) {
+        const sample = simpleSents[0] ? simpleSents[0].text.slice(0, 40) : '';
+        push('表达', 'minor', 0, Math.min(1, text.length), sample, null, `全篇 ${ss.length} 句中有 ${simpleSents.length} 句是 9 词以内的简单句，句式偏单一（六级更看重句式多样性）。`);
+      }
+      const BASIC_WORDS = /\b(good|bad|nice|big|very|thing|things)\b/gi;
+      const basicHits = text.match(BASIC_WORDS) || [];
+      if (basicHits.length >= 3) {
+        const at = text.search(BASIC_WORDS);
+        push('用词', 'minor', at, at + basicHits[0].length, basicHits.slice(0, 3).join(' / '), null, '六级用词要更精准：good → beneficial / rewarding，very + adj. → 更强的单个形容词，thing → 具体名词。');
+      }
+    }
+
+    /* 11) 信息覆盖 */
+    const refWords = reference ? words(reference).length : 0;
+    const wordRatio = refWords ? tWords / refWords : 1;
+    if (reference && tWords > 0 && wordRatio < P.shortRatio) {
+      push('内容', 'major', 0, Math.min(text.length, 1), '', null, '译文篇幅明显短于参考译文，可能大量遗漏原文信息。');
+    }
+
+    /* ---------------- 维度计算 ---------------- */
+    const covered = reference ? coverage(transcript, reference, input.keyPoints) : { points: [], score: tWords ? 72 : 0, minRatio: 1 };
+    const covScore = Math.max(0, Math.min(100, covered.score));
+
+    const W = { major: 6, minor: 2 };
+    const weighted = errors.reduce((a, e) => a + (W[e.sev] || 2), 0);
+    const density = tWords ? (weighted / tWords) * 100 : 0;
+    const accScore = tWords ? Math.max(5, 100 - density * 0.9) : 0;
+
+    const fluScore = fluency(text, errors);
+
+    let raw = 0.45 * covScore + 0.35 * accScore + 0.20 * fluScore;
+    let score = tWords === 0 ? 0 : Math.max(1, Math.min(15, Math.round(raw / 100 * 15)));
+
+    const majorCount = errors.filter(e => e.sev === 'major').length;
+    const majDensity = tWords ? majorCount / tWords * 100 : 0;
+    let cap = 15;
+    if (covScore <= 0 && tWords > 0) cap = Math.min(cap, 2);
+    else if (covScore < 15) cap = Math.min(cap, 3);
+    else if (covScore < 30) cap = Math.min(cap, 4);
+    else if (covScore < 42) cap = Math.min(cap, 5);
+    else if (covScore < 55) cap = Math.min(cap, 6);
+    else if (covScore < 62) cap = Math.min(cap, 7);
+    const structureErrors = errors.filter(e => e.type === '结构').length;
+    const fragments = errors.filter(e => /片段句/.test(e.why || '')).length;
+    if (structureErrors >= 3) cap = Math.min(cap, 8);
+    else if (structureErrors >= 1) cap = Math.min(cap, 9);
+    if (fragments >= 3) cap = Math.min(cap, 4);
+    else if (fragments === 2) cap = Math.min(cap, 5);
+    if (errors.some(e => /run-on/.test(e.why || ''))) cap = Math.min(cap, 8);
+    if (reference && covered.lex < 15 && covered.points.length && covered.points.every(p => !p.covered)) cap = Math.min(cap, 5);
+    /* 严重错误密度：六级要求更严（同等错误量，档位上限更低） */
+    if (exam === 'cet4') {
+      if (majorCount >= 1 && majDensity >= 1.8) cap = Math.min(cap, 12);
+      if (majorCount >= 8 || majDensity >= 10) cap = Math.min(cap, 8);
+      else if (majorCount >= 5 || majDensity >= 8) cap = Math.min(cap, 9);
+      else if (majorCount >= 3) cap = Math.min(cap, 10);
+    } else {
+      if (majorCount >= 1 && majDensity >= 1.0) cap = Math.min(cap, 13);
+      if (majorCount >= 7 || majDensity >= 10) cap = Math.min(cap, 7);
+      else if (majorCount >= 5 || majDensity >= 8) cap = Math.min(cap, 8);
+      else if (majorCount >= 3 || majDensity >= 6) cap = Math.min(cap, 10);
+      else if (majorCount >= 2) cap = Math.min(cap, 11);
+      if (P.simpleCap && simpleRatio >= 0.7) cap = Math.min(cap, P.simpleCap);
+    }
+    P.accCaps.forEach(pair => { if (accScore < pair[0]) cap = Math.min(cap, pair[1]); });
+    if (/[\u4e00-\u9fa5]/.test(text)) cap = Math.min(cap, 10);
+    score = Math.min(score, cap);
+    const perf = P.perfect;
+    if (score === 15 && (weighted > 0 || covScore < perf.cov15 || (covered.minRatio != null && covered.minRatio < perf.ratio15))) score = 14;
+    if (score === 14 && covScore < perf.cov14) score = 13;
+    if (tWords > 0 && score === 0) score = 1;
+
+    const band = BANDS.find(b => score >= b.min && score <= b.max) || BANDS[BANDS.length - 1];
+
+    return {
+      score, band, exam, examName: P.en, examLabel: P.name, lengthNote: P.length, focus: P.focus,
+      dims: { coverage: Math.round(covScore), accuracy: Math.round(accScore), fluency: Math.round(fluScore) },
+      stats: { words: tWords, sentences: sentences(text).length, keyPoints: covered.points.length, major: majorCount, minor: errors.length - majorCount },
+      errors: errors.sort((a, b) => a.start - b.start),
+      keyPoints: covered.points,
+      coverageNote: reference ? null : '未提供参考译文，信息覆盖维度按篇幅估算（可信度较低）。',
+      reason: reasonText(score, band, { covScore, accScore, fluScore, majorCount, weighted, tWords, errorRate: tWords ? errors.length / tWords * 100 : 0 }, P),
+      advice: adviceFor(errors, { covScore, accScore, fluScore, score, band }, exam),
+      revision: revise(text, errors),
+      wordRatio: Math.round((wordRatio || 0) * 100) / 100
+    };
+  }
+
+  function coverage(transcript, reference, keyPoints) {
+    const tStems = new Set(lowerWords(transcript).map(canon));
+    const wgt = w => GENERIC.has(w) ? 0.35 : (w.length >= 7 ? 1.3 : 1);
+    let chunks;
+    if (Array.isArray(keyPoints) && keyPoints.length) {
+      chunks = keyPoints.map(k => ({ zh: k.zh || '', en: k.en || '' }));
+    } else {
+      chunks = reference.split(/[.;。；\n]+|,\s*(?=(?:and|but|while|which|who)\b)/).map(s => s.trim()).filter(Boolean).map(en => ({ zh: '', en }));
+    }
+    if (!chunks.length) chunks = [{ zh: '', en: reference }];
+    const needSets = chunks.map(c => [...new Set(lowerWords(c.en).map(canon).filter(w => !STOP.has(w) && w.length > 2))]);
+    /* 跨意群反复出现的主题词（如 high-speed rail）对"某一点是否译出"区分度低，降权 */
+    const df = {};
+    needSets.forEach(set => set.forEach(w => df[w] = (df[w] || 0) + 1));
+    const points = chunks.map((c, i) => {
+      const need = needSets[i];
+      if (!need.length) return { zh: c.zh, en: c.en, hit: 0, total: 0, covered: true };
+      const weightOf = w => wgt(w) * (df[w] >= 2 ? 0.5 : 1);
+      let totalW = 0, hitW = 0;
+      need.forEach(w => { totalW += weightOf(w); if (tStems.has(w)) hitW += weightOf(w); });
+      const ratio = totalW ? hitW / totalW : 0;
+      const covered = need.length <= 2 ? hitW > 0 : ratio >= 0.55;
+      return { zh: c.zh, en: c.en, hit: need.filter(w => tStems.has(w)).length, total: need.length, ratio, covered };
+    });
+    const lex = points.length ? points.reduce((a, p) => a + Math.min(1, (p.ratio || 0) / 0.72), 0) / points.length : 0;
+    const tWords = words(transcript).length, rWords = words(reference).length;
+    const lenRatio = Math.min(1, tWords / Math.max(1, rWords));
+    /* 意群对得上 + 篇幅够，才给"意思基本传达"；纯堆篇幅不能代替意思 */
+    const meaning = lex < 0.08 ? lex * 100 * 1.2 : (0.7 * lex + 0.3 * lenRatio) * 100;
+    const minRatio = points.length ? Math.min.apply(null, points.map(p => p.ratio || 0)) : 1;
+    return { points, score: Math.min(100, meaning), lex: lex * 100, minRatio };
+  }
+
+  function fluency(text, errors) {
+    const ss = sentences(text);
+    if (!ss.length) return 0;
+    let s = 100;
+    const lens = ss.map(x => words(x.text).length);
+    const short = lens.filter(n => n < 5).length;
+    if (short / ss.length > 0.4) s -= 12;
+    const frag = errors.filter(e => e.type === '结构').length;
+    s -= Math.min(30, frag * 10);
+    if (ss.length === 1 && lens[0] > 60) s -= 10;
+    const conj = (text.match(/\b(and|but|or|so|because|although|while|when|if|which|that|who|however|therefore|moreover|besides)\b/gi) || []).length;
+    if (conj === 0 && ss.length >= 3) s -= 8;
+    const avg = lens.reduce((a, b) => a + b, 0) / ss.length;
+    if (avg > 32) s -= 8;
+    if (avg < 6) s -= 10;
+    s -= Math.min(12, errors.filter(e => e.type === '标点' || e.type === '用词').length * 2);
+    if (/[\u4e00-\u9fa5]/.test(text)) s = Math.min(s, 55);
+    return Math.max(5, Math.min(100, s));
+  }
+
+  function reasonText(score, band, d, P) {
+    const parts = [];
+    parts.push(`按${P.en}（${P.name}）翻译 15 分制总体评分法，本篇落入「${band.label}」档。`);
+    if (d.tWords === 0) return '未检测到有效英文译文，按 0 分处理。';
+    parts.push(`信息覆盖 ${Math.round(d.covScore)} 分：${d.covScore >= 80 ? '原文要点基本译出' : d.covScore >= 55 ? '大部分要点能对应，但有遗漏或改写不到位的意群' : '多条要点没有落到译文里，读者难以还原原文信息'}。`);
+    parts.push(`语言准确性 ${Math.round(d.accScore)} 分：共发现 ${d.majorCount} 处较严重错误（主谓一致 / 时态 / 搭配 / 结构等），全篇语言错误密度约 ${Math.round(d.errorRate || 0)} 处/百词。`);
+    parts.push(`行文连贯 ${Math.round(d.fluScore)} 分：${d.fluScore >= 80 ? '句子衔接自然，长短句搭配合理' : d.fluScore >= 60 ? '整体可读，但存在短句堆砌或连接词不足' : '句子碎片化明显，需要先保证每句结构完整'}。`);
+    if (P.id === 'cet6') parts.push(`六级评分要求：${P.focus}；因此同等错误量下，档位上限比四级更低。`);
+    if (score >= 13) parts.push(P.id === 'cet6' ? '错误很少且表达达标，符合六级 13 分以上档的描述。' : '基本无语言错误，仅有个别小错，符合 13 分以上档的描述。');
+    else if (score >= 10) parts.push('意思基本传达，属"少量语言错误"；把标红的高频错误改掉即可上探 12 分以上。');
+    else if (score >= 7) parts.push('勉强达意且有较多语言错误，其中包含结构性错误，符合 7–9 分档。');
+    else parts.push('只译出一小部分信息，语言错误密集，需从句子骨架（主谓宾）重新组织。');
+    return parts.join('');
+  }
+
+  const ADVICE = {
+    '主谓一致': '主谓一致是四六级阅卷的低级错误扣分点：写完后逐句圈出主语，确认 he/she/it 与单数名词用 -s 谓语，people/students 用复数谓语。',
+    '时态': '先定全文时态基调：介绍现状用一般现在时，叙述历史/变化用一般过去时或现在完成时，同一段内不要来回跳。',
+    '冠词': '可数名词单数前必须有 a/an/the；泛指用 a/an，特指或上文提过用 the，复数泛指可零冠词。',
+    '搭配': '把本卷出现的搭配错误抄成 3 组「动词 + 介词」卡片（如 depend on / arrive at / be married to），考前集中过一遍。',
+    '中式英语': '避免逐字对译：先抓中文句子的主干（谁 + 做什么 + 结果），再用英语的句型（主系表 / 主谓宾 / there be / 从句）落地。',
+    '名词单复数': '数量词（many / several / two）后一定接复数；information、knowledge、advice、progress 等不可数名词不加 -s。',
+    '拼写': '把标出的拼写错误集中抄写 3 遍，重点记 -ment、-tion、-ly 等后缀的固定拼法。',
+    '结构': '每个句子至少有一个谓语动词；中文的流水句要拆成 2–3 个英语句子，或用 which / that / while 连接。',
+    '标点': '整篇使用英文标点：逗号后空一格，句号用点号，不要出现中文全角符号。',
+    '中文残留': '考试中不允许出现汉字；想不起的词用上位词（thing / method / situation）绕开，也不要写中文。',
+    '用词': '同一实词在一段内出现 3 次以上就换表达，例如 important → significant / crucial。',
+    '内容': '动笔前把中文原文切成 4–6 个意群，每个意群至少写一个完整句子，确保不漏点。',
+    '表达': '高分句式讲究"紧凑"：用现在分词代替指代整句的 , which 从句（…, which makes learning flexible → …, making learning flexible）。'
+  };
+
+  /* 六级专属建议：同一错误类型，给更高级的提分动作 */
+  const ADVICE6 = {
+    '表达': '六级高分靠句式多样性：把两个简单句合并为定语从句 / 分词 / 名词化结构；避免全篇 It is... It can... 平铺。',
+    '用词': '六级用词要具体、准确：good → beneficial / rewarding，very important → vital / crucial，many → numerous / a growing number of。',
+    '结构': '六级同样先保证骨架正确：每个分句有主语和谓语；中文流水句用 which / while / with 结构衔接，不要逗号粘连。',
+    '内容': '六级原文约 180–200 字，信息点更多：动笔前按意群列提纲，逐块翻译，宁可句子简单也不要漏点。',
+    '搭配': '六级阅卷对搭配更敏感：把"动词 + 介词/名词"的固定搭配整理成卡片（play a role in / contribute to / be regarded as / attach importance to）。'
+  };
+
+  function adviceFor(errors, d, exam) {
+    const cet6 = exam === 'cet6';
+    const order = cet6
+      ? ['内容', '结构', '表达', '用词', '中式英语', '搭配', '主谓一致', '时态', '名词单复数', '冠词', '拼写', '标点', '中文残留']
+      : ['内容', '结构', '中文残留', '主谓一致', '时态', '搭配', '中式英语', '名词单复数', '冠词', '表达', '拼写', '标点', '用词'];
+    const table = cet6 ? Object.assign({}, ADVICE, ADVICE6) : ADVICE;
+    const count = {};
+    errors.forEach(e => count[e.type] = (count[e.type] || 0) + 1);
+    const targeted = order.filter(t => count[t]).slice(0, 3).map(t => ({ tag: t, count: count[t], text: table[t] || '' }));
+    const extra = [];
+    if (d.covScore < 60) extra.push(cet6
+      ? '六级先解决"译全"：原文更长，动笔前按逗号/句号切 5–7 个意群，逐块落地，避免整段漏译。'
+      : '先解决"译全"再解决"译好"：对着参考译文，把每句的中文意群和英文句子一一对应，缺哪块补哪块。');
+    if (cet6) {
+      if (d.score >= 12) extra.push('六级冲刺 13+：① 用一处分词或定语从句合并句子；② 换掉 good / very / many 等泛化词；③ 用 however / therefore / not only...but also 建立衔接，且不新增错误。');
+      else if (d.score >= 9) extra.push('六级提分重点在语言质量：先清掉主谓一致、时态、搭配错误（每处都可能把分数压在 12 以下），再把两个简单句合并成含 which / while / 分词的结构。');
+      else extra.push('六级先保底：信息点全覆盖 + 每句有谓语；背 5 个高频句型（play a vital role in / contribute to / be regarded as / not only...but also / with the development of）。');
+    } else if (d.score >= 10) extra.push('冲刺高档：把简单句合并成 1–2 个带从句或非谓语的长句，同时保证不新增语法错误。');
+    else if (d.score >= 7) extra.push('提分顺序：先改标红的严重错误（主谓一致、时态、搭配），再补信息点，最后润色连接词。');
+    else extra.push('从背诵 5 个万能句型开始（with the development of... / It is widely believed that... / plays an important role in...），保证每句都能写完整。');
+    return { targeted, extra };
+  }
+
+  function revise(text, errors) {
+    const usable = errors.filter(e => e.fix !== null && e.fix !== undefined && e.end > e.start)
+      .sort((a, b) => a.start - b.start);
+    let out = '', cursor = 0, n = 0;
+    usable.forEach(e => {
+      if (e.start < cursor) return;
+      out += text.slice(cursor, e.start) + e.fix;
+      cursor = e.end; n++;
+    });
+    out += text.slice(cursor);
+    return { text: out.replace(/[ \t]{2,}/g, ' ').replace(/\s+([,.;!?])/g, '$1').trim(), changes: n };
+  }
+
+  return { BANDS, EXAMS, evaluate, coverage, fluency, words, sentences, BAND_TEXT: BANDS };
+});
+
+</script>
+<script>
+(function () {
+  'use strict';
+  const el = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const transcriptEl = el('transcript');
+
+  /* ---------- 示例 ---------- */
+  const DEMO_SRC = '近年来，中国传统文化越来越受到年轻人的喜爱。越来越多的年轻人开始学习书法、京剧和传统乐器。他们不仅从中获得乐趣，也更加了解自己的文化根源。专家认为，这一现象有助于增强文化自信。';
+  const DEMO_REF = 'In recent years, traditional Chinese culture has become increasingly popular among young people. More and more young people are beginning to learn calligraphy, Peking Opera and traditional musical instruments. They not only gain pleasure from it but also understand their cultural roots better. Experts believe that this phenomenon helps to strengthen cultural confidence.';
+  const DEMO_ANS = `In recent years, Chinese traditional culture become more and more popular in young people.
+More and more young people begins to learn calligraphy, Beijing opera and traditional musics.
+He not only get fun from it, but also know their culture root more better.
+Expert think this phenomenon is help to strengthen culture confidence.`;
+
+  const DEMO6_SRC = '书法是中国特有的一种传统艺术。它不仅是书写汉字的方法，更是一种表达情感和审美的方式。几千年来，书法在中国人的日常生活中占有重要地位。如今，越来越多的人开始学习书法，希望通过练习培养耐心、提高修养。';
+  const DEMO6_REF = 'Calligraphy is a traditional art unique to China. It is not only a way of writing Chinese characters, but also a means of expressing emotions and aesthetic taste. For thousands of years, calligraphy has played an important role in the daily life of the Chinese people. Today, an increasing number of people are learning calligraphy, hoping to develop patience and improve their cultivation through practice.';
+  const DEMO6_ANS = `Calligraphy is a traditional art that only China has. It is not only a method to write Chinese characters, but also a way to express feelings and beauty. For thousands of years, it play an important part in Chinese people daily life. Today, more and more people begin to learn calligraphy, they hope to develop patience and improve themselves by practice.`;
+
+  /* ---------- 考试类型（四级 / 六级） ---------- */
+  let exam = localStorage.getItem('cet-exam') === 'cet6' ? 'cet6' : 'cet4';
+  const EXAM_HINT = { cet4: '140–160 字 · 抓基础准确', cet6: '180–200 字 · 比句式与用词' };
+  function setExam(v, silent) {
+    exam = v === 'cet6' ? 'cet6' : 'cet4';
+    localStorage.setItem('cet-exam', exam);
+    document.querySelectorAll('#examSeg button').forEach(b => b.classList.toggle('on', b.dataset.exam === exam));
+    el('examHint').textContent = EXAM_HINT[exam];
+    el('source').placeholder = exam === 'cet6' ? '粘贴六级中文原文（约 180–200 字）' : '粘贴四级中文原文（约 140–160 字）';
+    if (!silent && transcriptEl.value.trim()) grade();
+  }
+  document.querySelectorAll('#examSeg button').forEach(b => b.onclick = () => setExam(b.dataset.exam));
+  setExam(exam, true);
+
+  /* ---------- 通用 UI ---------- */
+  function toast(msg) {
+    const t = el('toast'); t.textContent = msg; t.classList.add('on');
+    clearTimeout(t._tm); t._tm = setTimeout(() => t.classList.remove('on'), 2000);
+  }
+  function count() {
+    const w = (transcriptEl.value.match(/[A-Za-z][A-Za-z'’-]*/g) || []).length;
+    el('count').textContent = w;
+  }
+  transcriptEl.addEventListener('input', count);
+  el('rubricBtn').onclick = () => {
+    const d = el('rubricDlg');
+    if (typeof d.showModal === 'function') { d.showModal(); return; }
+    d.classList.add('fb'); d.setAttribute('open', '');
+  };
+  el('closeRubric').onclick = () => {
+    const d = el('rubricDlg');
+    if (d.classList.contains('fb')) { d.classList.remove('fb'); d.removeAttribute('open'); return; }
+    if (typeof d.close === 'function') d.close();
+  };
+  el('rubricDlg').addEventListener('click', e => {
+    const d = el('rubricDlg');
+    if (e.target === d) { d.classList.remove('fb'); d.removeAttribute('open'); if (typeof d.close === 'function') d.close(); }
+  });
+  el('closeShare').onclick = () => el('shareMask').classList.remove('on');
+  el('shareMask').onclick = e => { if (e.target === el('shareMask')) el('shareMask').classList.remove('on'); };
+
+  /* ---------- 图片与识别 ---------- */
+  let imageDataUrl = '';
+  let lastOcr = '';
+  const PRESETS = {
+    qwen: { base: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-vl-max' },
+    openai: { base: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
+    zhipu: { base: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4v-plus' },
+    custom: { base: '', model: '' }
+  };
+  const cfg = JSON.parse(localStorage.getItem('cet-ocr-cfg') || '{}');
+  el('preset').value = cfg.preset || 'qwen';
+  el('model').value = cfg.model || PRESETS[el('preset').value].model;
+  el('base').value = cfg.base || PRESETS[el('preset').value].base;
+  if (cfg.key) el('key').value = cfg.key;
+  el('preset').onchange = () => {
+    const p = PRESETS[el('preset').value];
+    if (p.base) el('base').value = p.base;
+    if (p.model) el('model').value = p.model;
+    saveCfg();
+  };
+  function saveCfg() {
+    localStorage.setItem('cet-ocr-cfg', JSON.stringify({
+      preset: el('preset').value, model: el('model').value.trim(),
+      base: el('base').value.trim(), key: el('key').value.trim()
+    }));
+  }
+  ['base', 'model', 'key'].forEach(id => el(id).addEventListener('change', saveCfg));
+
+  el('pickBtn').onclick = () => el('file').click();
+  el('file').onchange = e => { const f = e.target.files[0]; if (f) loadImage(f); };
+
+  function loadImage(file) {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1600;
+      const r = Math.min(1, MAX / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      imageDataUrl = c.toDataURL('image/jpeg', 0.86);
+      el('preview').src = imageDataUrl;
+      el('previewBox').style.display = 'block';
+      el('ocrBtn').disabled = false;
+      el('verifyBtn').hidden = true;
+      setStatus('已选图片，点“识别手写”开始转写');
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => { setStatus('图片读取失败，请换一张', 'err'); URL.revokeObjectURL(url); };
+    img.src = url;
+  }
+
+  const OCR_PROMPT = `You are a careful OCR engine for an English handwritten exam answer.
+Transcribe the student's handwritten ENGLISH answer exactly as written.
+
+Rules:
+1) Transcribe line by line, following the order of the lines; keep the original line breaks.
+2) Keep the student's own spelling, grammar and capitalization mistakes EXACTLY as written. Never correct, translate, paraphrase or complete anything.
+3) Ignore printed text, question numbers, blanks, ruled lines and page headers; only the handwriting.
+4) If a word or letter cannot be read with confidence, write [?] for that word instead of guessing. Do not invent words.
+5) Preserve punctuation marks as written; if there is no punctuation, do not add any.
+6) If the image contains no legible English handwriting, output exactly: NO_TEXT
+
+Output ONLY the transcription (or NO_TEXT). No explanations, no quotes, no markdown.`;
+
+  const VERIFY_PROMPT = `You are proofreading an OCR result of English handwriting against the original image.
+You will receive the image and a draft transcription.
+
+Task: compare the draft with the handwriting word by word and fix ONLY misread characters/words (e.g. r/n, l/1, a/o, missing letters, merged words). Keep the student's real spelling and grammar errors unchanged - do not improve the English, do not translate, do not add or delete content.
+
+Output format (plain text, no markdown):
+FIRST LINE: the corrected transcription, line breaks kept as in the draft.
+Then one line starting with @@ followed by a short list of fixes as "wrong=>right", separated by "; ". If nothing needs fixing, write @@ none.`;
+
+  function setStatus(msg, cls) {
+    const s = el('ocrStatus'); s.textContent = msg; s.className = 'status' + (cls ? ' ' + cls : '');
+  }
+  function ocrConfigOk() {
+    const base = el('base').value.trim().replace(/\/+$/, '');
+    const key = el('key').value.trim();
+    const model = el('model').value.trim();
+    if (!base || !key || !model) { el('ocrCfg').open = true; throw new Error('请先在“识别设置”里填接口、模型和 Key'); }
+    return { base, key, model };
+  }
+  async function visionAsk(prompt, draft) {
+    const { base, key, model } = ocrConfigOk();
+    const content = [{ type: 'text', text: prompt }];
+    if (draft) content.push({ type: 'text', text: 'DRAFT TRANSCRIPTION:\n' + draft });
+    content.push({ type: 'image_url', image_url: { url: imageDataUrl } });
+    const res = await fetch(base + '/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model, temperature: 0, messages: [{ role: 'user', content }] })
+    });
+    if (!res.ok) throw new Error('接口返回 ' + res.status + '：' + (await res.text()).slice(0, 140));
+    const data = await res.json();
+    const t = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+    return t.replace(/^```[a-z]*\n?|```$/g, '').trim();
+  }
+  function quality(t) {
+    const w = (t.match(/[A-Za-z][A-Za-z'’-]*/g) || []).length;
+    const unk = (t.match(/\[\?\]/g) || []).length;
+    return { w, unk, ratio: w ? unk / w : 0 };
+  }
+  function applyOcr(text, label) {
+    if (/^NO_TEXT\b/.test(text)) { setStatus('图中没有识别到英文字迹，请确认照片方向与清晰度', 'err'); return; }
+    transcriptEl.value = text; count();
+    lastOcr = text; el('verifyBtn').hidden = false;
+    const q = quality(text);
+    if (q.w && q.ratio > 0.04) setStatus(label + '：' + q.w + ' 词，' + q.unk + ' 处 [?] 待确认，建议点“二次校对”或直接改文字', 'warn');
+    else setStatus(label + '：' + q.w + ' 词' + (q.unk ? '，' + q.unk + ' 处 [?] 待确认' : '') + '。请核对后再评分', 'ok');
+  }
+
+  el('ocrBtn').onclick = async () => {
+    if (!imageDataUrl) return toast('请先拍照或选择图片');
+    el('ocrBtn').disabled = true; setStatus('正在识别手写文字…');
+    try { applyOcr(await visionAsk(OCR_PROMPT), '识别完成'); }
+    catch (e) { setStatus('识别失败：' + e.message, 'err'); }
+    finally { el('ocrBtn').disabled = false; }
+  };
+  el('verifyBtn').onclick = async () => {
+    const draft = transcriptEl.value.trim() || lastOcr;
+    if (!imageDataUrl || !draft) return;
+    el('verifyBtn').disabled = true; setStatus('正在对照原图二次校对…');
+    try {
+      const out = await visionAsk(VERIFY_PROMPT, draft);
+      const nl = out.indexOf('\n');
+      const body = nl >= 0 ? out.slice(0, nl).trim() : out.trim();
+      const note = nl >= 0 ? out.slice(nl + 1).replace(/^@@\s*/, '').trim() : '';
+      if (!body) throw new Error('校对结果为空');
+      transcriptEl.value = body; count(); lastOcr = body;
+      setStatus(note && note !== 'none' ? '二次校对修正：' + note.slice(0, 120) : '二次校对完成，未发现误读', 'ok');
+    } catch (e) { setStatus('校对失败：' + e.message, 'err'); }
+    finally { el('verifyBtn').disabled = false; }
+  };
+
+  /* ---------- 批改 ---------- */
+  el('demoBtn').onclick = () => {
+    if (exam === 'cet6') {
+      el('source').value = DEMO6_SRC; el('reference').value = DEMO6_REF; transcriptEl.value = DEMO6_ANS;
+    } else {
+      el('source').value = DEMO_SRC; el('reference').value = DEMO_REF; transcriptEl.value = DEMO_ANS;
+    }
+    count(); grade();
+    toast(exam === 'cet6' ? '已载入六级示例并完成批改' : '已载入四级示例并完成批改');
+  };
+  el('gradeBtn').onclick = grade;
+  transcriptEl.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') grade();
+  });
+
+  let lastResult = null;
+
+  function grade() {
+    const transcript = transcriptEl.value.trim();
+    const reference = el('reference').value.trim();
+    const source = el('source').value.trim();
+    if (!transcript) { toast('先录入学生的英文译文'); transcriptEl.focus(); return; }
+    let r;
+    try { r = CETGrader.evaluate({ transcript, reference, source, exam }); }
+    catch (e) { toast('批改失败：' + e.message); return; }
+    lastResult = { r, transcript };
+    render(r, transcript);
+  }
+
+  const bandTitle = s => s >= 13 ? '优秀：表达准确，接近范文' : s >= 10 ? '良好：意思基本到位' :
+    s >= 7 ? '偏弱：能读懂，但错误较多' : s >= 4 ? '较差：只译出一小部分' : s > 0 ? '很差：支离破碎' : '空卷';
+
+  function ringSvg(score) {
+    const R = 42, C = 2 * Math.PI * R;
+    const p = Math.max(0, Math.min(1, score / 15));
+    const color = score >= 13 ? 'var(--green)' : score >= 10 ? 'var(--accent)' : score >= 4 ? 'var(--amber)' : 'var(--red)';
+    return `<div class="ring"><svg viewBox="0 0 96 96" aria-hidden="true">
+      <circle cx="48" cy="48" r="${R}" fill="none" stroke="#eee9de" stroke-width="9"/>
+      <circle cx="48" cy="48" r="${R}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round"
+        stroke-dasharray="${(C * p).toFixed(1)} ${C.toFixed(1)}"/></svg>
+      <div class="num"><div style="text-align:center"><b>${score}</b><br><span>/ 15 分</span></div></div></div>`;
+  }
+
+  function dim(label, value, cls) {
+    return `<div class="dim ${cls}"><span>${label}</span><div class="bar"><i style="width:${Math.max(0, Math.min(100, value))}%"></i></div><b>${Math.round(value)}</b></div>`;
+  }
+
+  function render(r, transcript) {
+    const errs = r.errors.map(e => `<div class="err ${e.sev === 'minor' ? 'minor' : ''}">
+      <div class="top-line"><span class="badge">${esc(e.type)}</span><span class="sev">${e.sev === 'major' ? '严重' : '轻微'}</span></div>
+      <div class="src">${esc(e.snippet)}</div>
+      ${e.fix ? `<div class="fix">→ ${esc(e.fix)}</div>` : ''}
+      <div class="why">${esc(e.why)}</div></div>`).join('');
+    const kps = (r.keyPoints || []).map(p => `<div class="kp"><i class="${p.covered ? 'y' : 'm'}">${p.covered ? '✓' : '–'}</i>
+      <span>${esc(p.en || p.zh || '')}${p.covered ? '' : ' <span style="color:var(--muted)">（未译出）</span>'}</span></div>`).join('');
+    const targeted = (r.advice.targeted || []).map(a => `<li><b>${esc(a.tag)}</b>（${a.count} 处）：${esc(a.text)}</li>`).join('');
+    const extra = (r.advice.extra || []).map(x => `<li>${esc(x)}</li>`).join('');
+
+    el('report').innerHTML = `<section class="card">
+      <div class="card-b">
+        <div class="score-head">
+          ${ringSvg(r.score)}
+          <div class="sh-main"><span class="pill">${esc(r.examName)}</span><span class="pill">${r.band.label}</span>
+            <h3>${bandTitle(r.score)}</h3><p>${esc(r.band.desc)}</p></div>
+        </div>
+        <div class="dims">
+          ${dim('信息覆盖', r.dims.coverage, 'cov')}
+          ${dim('语言准确', r.dims.accuracy, 'acc')}
+          ${dim('行文连贯', r.dims.fluency, 'flu')}
+        </div>
+        <div class="note">${esc(r.lengthNote)}；评分侧重：${esc(r.focus)}。</div>
+        <div class="sec"><h4>评分理由</h4><p>${esc(r.reason)}</p>
+          ${r.coverageNote ? `<div class="note">${esc(r.coverageNote)}</div>` : ''}</div>
+        ${kps ? `<div class="sec"><h4>原文信息点 <span class="t">${r.keyPoints.filter(p => p.covered).length}/${r.keyPoints.length} 个意群已译出</span></h4><div class="kps">${kps}</div></div>` : ''}
+        ${errs ? `<div class="sec"><h4>逐处问题 <span class="t">${r.errors.length} 处</span></h4><div class="errs">${errs}</div></div>` : `<div class="sec"><h4>逐处问题</h4><p>没有检出明显的语法/搭配错误。</p></div>`}
+        <div class="sec"><h4>润色版 <span class="t">只改错，不改意思</span></h4><div class="revised">${esc(r.revision.text)}</div></div>
+        <div class="sec advice"><h4>修改与提升建议</h4><ol>${targeted}${extra}</ol>
+          <div class="extra">${r.exam === 'cet6' ? '六级先保信息完整，再提语言质量：句式升级、用词替换都要在“零新增错误”的前提下做。' : '先改标红的严重错误，再补信息点，最后润色连接词——这是 9 分到 12 分的最短路径。'}</div></div>
+        <div class="share-row">
+          <button class="primary" id="makeCard">生成成绩单</button>
+          <button id="copyResult">复制批改结果</button>
+        </div>
+      </div>
+    </section>`;
+
+    el('makeCard').onclick = () => makeCard(r, transcript);
+    el('copyResult').onclick = () => copyResult(r);
+    window.scrollTo({ top: el('report').offsetTop - 54, behavior: 'smooth' });
+  }
+
+  function plainResult(r) {
+    const lines = [];
+    lines.push(`【${r.examName} 翻译批改】${r.score} / 15 分（${r.band.label}）`);
+    lines.push(`信息覆盖 ${Math.round(r.dims.coverage)} · 语言准确 ${Math.round(r.dims.accuracy)} · 行文连贯 ${Math.round(r.dims.fluency)}`);
+    lines.push('');
+    lines.push(r.reason);
+    if (r.errors.length) {
+      lines.push('');
+      lines.push('主要问题：');
+      r.errors.slice(0, 5).forEach((e, i) => lines.push(`${i + 1}. [${e.type}] ${e.snippet}${e.fix ? ' → ' + e.fix : ''}`));
+    }
+    if (r.advice.targeted && r.advice.targeted.length) {
+      lines.push('');
+      lines.push('提分建议：' + r.advice.targeted.map(a => a.text).join(' '));
+    }
+    lines.push('');
+    lines.push('—— 来自「四六级翻译批改」');
+    return lines.join('\n');
+  }
+  async function copyResult(r) {
+    const text = plainResult(r);
+    try { await navigator.clipboard.writeText(text); toast('已复制，可直接粘贴到微信'); }
+    catch (e) {
+      const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); toast('已复制'); } catch (_) { toast('复制失败，请长按选择文字'); }
+      document.body.removeChild(ta);
+    }
+  }
+
+  /* ---------- 成绩单图片 ---------- */
+  function wrapText(ctx, text, x, y, maxW, lh, maxLines) {
+    const chars = Array.from(text);
+    let line = '', lines = [];
+    for (const ch of chars) {
+      if (ctx.measureText(line + ch).width > maxW) { lines.push(line); line = ch; if (lines.length >= maxLines) break; }
+      else line += ch;
+    }
+    if (lines.length < maxLines && line) lines.push(line);
+    lines.forEach((l, i) => ctx.fillText(l, x, y + i * lh));
+    return lines.length * lh;
+  }
+  function makeCard(r, transcript) {
+    const W = 750, H = 1180;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    const F = '"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif';
+    g.fillStyle = '#f6f2e9'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#fffdf8'; g.fillRect(30, 30, W - 60, H - 60);
+    g.strokeStyle = '#e5e0d5'; g.lineWidth = 2; g.strokeRect(30, 30, W - 60, H - 60);
+
+    g.fillStyle = '#7f8798'; g.font = `22px ${F}`;
+    g.fillText(r.examName + ' 翻译 · 智能批改', 70, 96);
+    g.fillStyle = '#1f2430'; g.font = `bold 26px ${F}`; g.textAlign = 'right';
+    g.fillText(new Date().toLocaleDateString('zh-CN'), W - 70, 96); g.textAlign = 'left';
+
+    const scoreColor = r.score >= 13 ? '#2f7d5b' : r.score >= 10 ? '#33507e' : r.score >= 4 ? '#a9772a' : '#b04a3a';
+    g.fillStyle = scoreColor; g.font = `bold 150px ${F}`;
+    g.fillText(String(r.score), 70, 270);
+    g.fillStyle = '#7f8798'; g.font = `26px ${F}`;
+    g.fillText('/ 15 分', 70 + g.measureText(String(r.score)).width + 24, 266);
+
+    g.fillStyle = scoreColor; g.font = `bold 30px ${F}`;
+    g.fillText(r.band.label + '　' + bandTitle(r.score), 70, 330);
+
+    // 维度条
+    const dims = [['信息覆盖', r.dims.coverage, '#33507e'], ['语言准确', r.dims.accuracy, '#a9772a'], ['行文连贯', r.dims.fluency, '#2f7d5b']];
+    dims.forEach((d, i) => {
+      const y = 390 + i * 56;
+      g.fillStyle = '#5a6273'; g.font = `23px ${F}`; g.fillText(d[0], 70, y + 18);
+      g.fillStyle = '#f0ece2'; g.fillRect(200, y + 2, 420, 14);
+      g.fillStyle = d[2]; g.fillRect(200, y + 2, 420 * Math.max(0, Math.min(1, d[1] / 100)), 14);
+      g.fillStyle = '#1f2430'; g.font = `bold 22px ${F}`; g.textAlign = 'right';
+      g.fillText(String(Math.round(d[1])), W - 70, y + 18); g.textAlign = 'left';
+    });
+
+    g.strokeStyle = '#e5e0d5'; g.beginPath(); g.moveTo(70, 590); g.lineTo(W - 70, 590); g.stroke();
+
+    g.fillStyle = '#1f2430'; g.font = `bold 27px ${F}`; g.fillText('评语', 70, 640);
+    g.fillStyle = '#5a6273'; g.font = `24px ${F}`;
+    wrapText(g, r.reason, 70, 682, W - 140, 38, 3);
+
+    let y = 820;
+    if (r.errors.length) {
+      g.fillStyle = '#1f2430'; g.font = `bold 27px ${F}`; g.fillText('主要问题', 70, y); y += 44;
+      for (const e of r.errors.slice(0, 3)) {
+        g.fillStyle = '#b04a3a'; g.font = `bold 22px ${F}`;
+        g.fillText('· ' + e.type, 70, y);
+        g.fillStyle = '#5a6273'; g.font = `22px ${F}`;
+        const t = (e.snippet || '') + (e.fix ? ' → ' + e.fix : '');
+        wrapText(g, t, 180, y, W - 260, 32, 1);
+        y += 40;
+      }
+    }
+    if (r.advice.targeted && r.advice.targeted.length) {
+      y += 6;
+      g.fillStyle = '#1f2430'; g.font = `bold 27px ${F}`; g.fillText('下一步', 70, y); y += 44;
+      g.fillStyle = '#5a6273'; g.font = `22px ${F}`;
+      wrapText(g, r.advice.targeted[0].text, 70, y, W - 140, 34, 3);
+    }
+
+    g.fillStyle = '#9aa1af'; g.font = `20px ${F}`;
+    g.fillText('评分用于教学反馈 · 最终成绩以考场阅卷为准', 70, H - 60);
+    g.textAlign = 'right'; g.fillText(r.examName + ' 批改', W - 70, H - 60); g.textAlign = 'left';
+
+    el('shareImg').src = c.toDataURL('image/png');
+    el('shareMask').classList.add('on');
+  }
+
+  count();
+})();
+</script>
+</body>
+</html>
